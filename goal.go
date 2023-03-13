@@ -60,3 +60,7 @@ func groupList() (groups []group) {
 func Register(modelList ...any) {
 	models = append(models, modelList)
 }
+
+func Models() []any {
+	return models
+}

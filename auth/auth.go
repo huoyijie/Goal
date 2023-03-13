@@ -31,6 +31,7 @@ type Role struct {
 
 type Session struct {
 	ID         string `gorm:"primaryKey;size:32"`
+	UserID     uint
 	User       User
 	ExpireDate time.Time
 }
