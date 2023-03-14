@@ -15,7 +15,7 @@ type User struct {
 	Lastname string
 
 	DateJoined time.Time
-	LastLogin  time.Time `gorm:"null"`
+	LastSignin  time.Time `gorm:"null"`
 
 	IsSuperuser,
 	IsStaff,

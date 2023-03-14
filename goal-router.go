@@ -1,6 +1,7 @@
 package goal
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -24,7 +25,7 @@ func authMiddleware(c *gin.Context) {
 		session := &auth.Session{
 			ID: sessionid,
 		}
-		if err := db.First(session).Error; err == nil && time.Now().Before(session.ExpireDate) {
+		if err := db.Preload("User").First(session).Error; err == nil && time.Now().Before(session.ExpireDate) {
 			c.Set("session", session)
 		}
 	}
@@ -48,6 +49,31 @@ func signinRequiredMiddleware(c *gin.Context) {
 		}
 	}
 	c.Next()
+}
+
+func authorizeMiddleware(c *gin.Context) {
+	action := c.Param("action")
+	group := c.Param("group")
+	item := c.Param("item")
+
+	obj := fmt.Sprintf("%s_%s", group, item)
+
+	session, found := c.Get("session")
+	if found {
+		// validate session
+		session := session.(*auth.Session)
+		// superuser
+		if session.User.IsSuperuser {
+			c.Next()
+			return
+		}
+		// has permission
+		if ok, err := enforcer.Enforce(session.UserID, obj, action); err == nil && ok {
+			c.Next()
+			return
+		}
+	}
+	c.AbortWithStatus(http.StatusUnauthorized)
 }
 
 func setCookieSessionid(c *gin.Context, sessionid string) {
@@ -101,6 +127,7 @@ func signinHandler(c *gin.Context) {
 		return
 	}
 
+	// todo save user last_signin
 	// save new session to request context
 	newSession.User = user
 	c.Set("session", newSession)
@@ -124,7 +151,7 @@ func newRouter() *gin.Engine {
 	anonymousGroup.GET("signin", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "signin.htm", gin.H{
 			"SigninUrl": "/admin/signin",
-			"HomeUrl": "/admin/",
+			"HomeUrl":   "/admin/",
 		})
 	})
 	anonymousGroup.POST("signin", signinHandler)
@@ -144,6 +171,41 @@ func newRouter() *gin.Engine {
 	signinRequiredGroup := adminGroup.Group("", signinRequiredMiddleware)
 	signinRequiredGroup.GET("/", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "index.htm", gin.H{})
+	})
+
+	modelGroup := signinRequiredGroup.Group("", authorizeMiddleware)
+	// 1.`/get/group/item`
+	// 2.`/add/group/item`
+	// 3.`/change/group/item/1`
+	modelGroup.GET("/:action/:group/:item/*id", func(c *gin.Context) {
+		action := c.Param("action")
+		group := c.Param("group")
+		item := c.Param("item")
+		tmp := strings.Split(c.Param("id"), "/")
+		id := tmp[1]
+
+		badId := len(tmp) != 2
+		badChange := action == "change" && id == ""
+		badGetOrAdd := (action == "get" || action == "add") && id != ""
+		if badId || badChange || badGetOrAdd {
+			c.AbortWithStatus(http.StatusBadRequest)
+			return
+		}
+
+		c.HTML(http.StatusOK, fmt.Sprintf("%s.htm", action), gin.H{
+			"Action": action,
+			"Group":  group,
+			"Item":   item,
+			"Id":     id,
+		})
+	})
+	// 4.`/add/group/item`
+	// 5.`/delete/group/item/1`
+	// 6.`/change/group/item/1`
+	modelGroup.POST("/:action/:group/:item/*id", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"Code": 0,
+		})
 	})
 
 	return router
