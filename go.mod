@@ -8,6 +8,7 @@ require (
 	github.com/gin-gonic/gin v1.9.0
 	github.com/glebarez/sqlite v1.5.0
 	github.com/go-playground/validator/v10 v10.11.2
+	github.com/google/uuid v1.3.0
 	golang.org/x/crypto v0.7.0
 	golang.org/x/term v0.6.0
 	golang.org/x/text v0.8.0
@@ -26,7 +27,6 @@ require (
 	github.com/goccy/go-json v0.10.0 // indirect
 	github.com/golang-sql/civil v0.0.0-20220223132316-b832511892a9 // indirect
 	github.com/golang-sql/sqlexp v0.1.0 // indirect
-	github.com/google/uuid v1.3.0 // indirect
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
 	github.com/jackc/pgconn v1.13.0 // indirect
 	github.com/jackc/pgio v1.0.0 // indirect
