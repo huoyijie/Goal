@@ -13,8 +13,6 @@ import (
 	"github.com/huoyijie/goal/util"
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/term"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
 )
 
 type User struct {
@@ -64,11 +62,6 @@ func main() {
 	bcryptHash, err := bcrypt.GenerateFromPassword(rawPassword, 14)
 	util.LogFatal(err)
 
-	db, err := gorm.Open(sqlite.Open("db.sqlite3"), &gorm.Config{})
-	util.LogFatal(err)
-
-	db.AutoMigrate(goal.Models()...)
-
 	superuser := &auth.User{
 		Username:    user.Username,
 		Email:       user.Email,
@@ -79,6 +72,7 @@ func main() {
 		IsActive:    true,
 	}
 
+	db := goal.OpenDB()
 	err = db.Create(superuser).Error
 	util.LogFatal(err)
 }
