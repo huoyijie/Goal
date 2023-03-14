@@ -16,9 +16,10 @@ type Code int
 
 const (
 	ErrInvalidUsernameOrPassword Code = -(iota + 10000)
+	ErrUnauthorized
 )
 
-func authHandler() gin.HandlerFunc {
+func authMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if sessionid, err := c.Cookie("sessionid"); err == nil {
 			session := &auth.Session{
@@ -26,6 +27,27 @@ func authHandler() gin.HandlerFunc {
 			}
 			if err := db.First(session).Error; err == nil && time.Now().Before(session.ExpireDate) {
 				c.Set("session", session)
+			}
+		}
+		c.Next()
+	}
+}
+
+func anonymous(c *gin.Context) bool {
+	_, found := c.Get("session")
+	return !found
+}
+
+func signinRequiredMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if anonymous(c) {
+			contentType := c.GetHeader("Content-Type")
+			if strings.EqualFold(contentType, "application/json") {
+				c.JSON(http.StatusUnauthorized, gin.H{
+					"Code": ErrUnauthorized,
+				})
+			} else {
+				c.Redirect(http.StatusFound, "/signin")
 			}
 		}
 		c.Next()
@@ -101,13 +123,14 @@ func newRouter() *gin.Engine {
 	router := gin.Default()
 	router.SetTrustedProxies(nil)
 	router.SetHTMLTemplate(newTemplate())
-	router.Use(authHandler())
+	router.Use(authMiddleware())
 
-	router.GET("signin", func(c *gin.Context) {
+	anonymousGroup := router.Group("")
+	anonymousGroup.GET("signin", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "signin.htm", gin.H{})
 	})
-	router.POST("signin", signinHandler())
-	router.GET("signout", func(c *gin.Context) {
+	anonymousGroup.POST("signin", signinHandler())
+	anonymousGroup.GET("signout", func(c *gin.Context) {
 		// if a session found, clear it in db
 		if session, found := c.Get("session"); found {
 			session := session.(*auth.Session)
@@ -119,7 +142,9 @@ func newRouter() *gin.Engine {
 		setCookieSessionid(c, "")
 		c.JSON(http.StatusOK, gin.H{"Code": 0})
 	})
-	router.GET("/", func(c *gin.Context) {
+
+	authGroup := router.Group("", signinRequiredMiddleware())
+	authGroup.GET("/", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "index.htm", gin.H{})
 	})
 	return router
