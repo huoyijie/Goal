@@ -19,18 +19,16 @@ const (
 	ErrUnauthorized
 )
 
-func authMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		if sessionid, err := c.Cookie("sessionid"); err == nil {
-			session := &auth.Session{
-				ID: sessionid,
-			}
-			if err := db.First(session).Error; err == nil && time.Now().Before(session.ExpireDate) {
-				c.Set("session", session)
-			}
+func authMiddleware(c *gin.Context) {
+	if sessionid, err := c.Cookie("sessionid"); err == nil {
+		session := &auth.Session{
+			ID: sessionid,
 		}
-		c.Next()
+		if err := db.First(session).Error; err == nil && time.Now().Before(session.ExpireDate) {
+			c.Set("session", session)
+		}
 	}
+	c.Next()
 }
 
 func anonymous(c *gin.Context) bool {
@@ -38,20 +36,18 @@ func anonymous(c *gin.Context) bool {
 	return !found
 }
 
-func signinRequiredMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		if anonymous(c) {
-			contentType := c.GetHeader("Content-Type")
-			if strings.EqualFold(contentType, "application/json") {
-				c.JSON(http.StatusUnauthorized, gin.H{
-					"Code": ErrUnauthorized,
-				})
-			} else {
-				c.Redirect(http.StatusFound, "/signin")
-			}
+func signinRequiredMiddleware(c *gin.Context) {
+	if anonymous(c) {
+		contentType := c.GetHeader("Content-Type")
+		if strings.EqualFold(contentType, "application/json") {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"Code": ErrUnauthorized,
+			})
+		} else {
+			c.Redirect(http.StatusFound, "/signin")
 		}
-		c.Next()
 	}
+	c.Next()
 }
 
 func setCookieSessionid(c *gin.Context, sessionid string) {
@@ -123,7 +119,7 @@ func newRouter() *gin.Engine {
 	router := gin.Default()
 	router.SetTrustedProxies(nil)
 	router.SetHTMLTemplate(newTemplate())
-	router.Use(authMiddleware())
+	router.Use(authMiddleware)
 
 	anonymousGroup := router.Group("")
 	anonymousGroup.GET("signin", func(c *gin.Context) {
@@ -143,8 +139,8 @@ func newRouter() *gin.Engine {
 		c.JSON(http.StatusOK, gin.H{"Code": 0})
 	})
 
-	authGroup := router.Group("", signinRequiredMiddleware())
-	authGroup.GET("/", func(c *gin.Context) {
+	signinRequiredGroup := router.Group("", signinRequiredMiddleware)
+	signinRequiredGroup.GET("/", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "index.htm", gin.H{})
 	})
 	return router
