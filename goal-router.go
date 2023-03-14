@@ -32,6 +32,14 @@ func authHandler() gin.HandlerFunc {
 	}
 }
 
+func setCookieSessionid(c *gin.Context, sessionid string) {
+	expireIn := 3 * 24 * 60 * 60
+	if len(sessionid) == 0 {
+		expireIn = -1
+	}
+	c.SetCookie("sessionid", sessionid, expireIn, "/", "127.0.0.1", false, true)
+}
+
 type SigninForm struct {
 	Username string `json:"username" binding:"required,alphanum,min=3,max=40"`
 	Password string `json:"password" binding:"required"`
@@ -55,8 +63,8 @@ func signinHandler() gin.HandlerFunc {
 		id, err := uuid.NewUUID()
 		util.LogFatal(err)
 		sessionid := strings.ToLower(strings.ReplaceAll(id.String(), "-", ""))
+		setCookieSessionid(c, sessionid)
 
-		c.SetCookie("sessionid", sessionid, 3*24*60*60, "/", "127.0.0.1", false, true)
 		c.JSON(http.StatusOK, gin.H{
 			"Code": 0,
 		})
@@ -73,7 +81,12 @@ func newRouter() *gin.Engine {
 		c.HTML(http.StatusOK, "signin.htm", gin.H{})
 	})
 	router.POST("signin", signinHandler())
-	// router.GET("signout", signoutHandler())
-	// router.GET("/", homeHandler())
+	router.GET("signout", func(c *gin.Context) {
+		setCookieSessionid(c, "")
+		c.JSON(http.StatusOK, gin.H{"Code": 0})
+	})
+	router.GET("/", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "index.htm", gin.H{})
+	})
 	return router
 }
