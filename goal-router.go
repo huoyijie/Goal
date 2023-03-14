@@ -37,6 +37,14 @@ func anonymous(c *gin.Context) bool {
 	return !found
 }
 
+func getSession(c *gin.Context) *auth.Session {
+	if session, found := c.Get("session"); found {
+		session := session.(*auth.Session)
+		return session
+	}
+	return nil
+}
+
 func signinRequiredMiddleware(c *gin.Context) {
 	if anonymous(c) {
 		contentType := c.GetHeader("Content-Type")
@@ -56,7 +64,7 @@ func authorizeMiddleware(c *gin.Context) {
 	group := c.Param("group")
 	item := c.Param("item")
 
-	obj := fmt.Sprintf("%s_%s", group, item)
+	obj := fmt.Sprintf("%s.%s", group, item)
 
 	session, found := c.Get("session")
 	if found {
@@ -170,7 +178,35 @@ func newRouter() *gin.Engine {
 
 	signinRequiredGroup := adminGroup.Group("", signinRequiredMiddleware)
 	signinRequiredGroup.GET("/", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "index.htm", gin.H{})
+		session := getSession(c)
+		groups := groupList()
+		for _, group := range groups {
+			for _, item := range group.Items {
+				can := func(act string) bool {
+					if session.User.IsSuperuser {
+						return true
+					}
+					obj := strings.ToLower(fmt.Sprintf("%s.%s", group.Name, item.Name))
+					ok, err := enforcer.Enforce(session.UserID, obj, act)
+					return err == nil && ok
+				}
+				if can("add") {
+					item.CanAdd = true
+				}
+				if can("delete") {
+					item.CanDelete = true
+				}
+				if can("change") {
+					item.CanChange = true
+				}
+				if can("get") {
+					item.CanGet = true
+				}
+			}
+		}
+		c.HTML(http.StatusOK, "index.htm", gin.H{
+			"Groups": groups,
+		})
 	})
 
 	modelGroup := signinRequiredGroup.Group("", authorizeMiddleware)

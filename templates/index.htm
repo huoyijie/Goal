@@ -1,1 +1,10 @@
-Hello, world!
+{{range .Groups}}
+  {{.Name}}
+  {{range .Items}}
+    {{.Name}}
+    Add: {{.CanAdd}}
+    Delete: {{.CanDelete}}
+    Change: {{.CanChange}}
+    Get: {{.CanGet}}
+  {{end}}
+{{end}}

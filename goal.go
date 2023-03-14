@@ -27,27 +27,31 @@ var models = []any{
 	&auth.Session{},
 }
 
-type item struct {
+type Item struct {
 	Name string
+	CanAdd,
+	CanDelete,
+	CanChange,
+	CanGet bool
 }
 
-type group struct {
+type Group struct {
 	Name  string
-	items []item
+	Items []*Item
 }
 
-func groupList() (groups []group) {
-	dict := map[string][]item{}
+func groupList() (groups []*Group) {
+	dict := map[string][]*Item{}
 
 	for _, model := range models {
 		elem := reflect.TypeOf(model).Elem()
 		pkgName := cases.Title(language.Und).String(filepath.Base(elem.PkgPath()))
 		if items, ok := dict[pkgName]; ok {
-			dict[pkgName] = append(items, item{
+			dict[pkgName] = append(items, &Item{
 				Name: elem.Name(),
 			})
 		} else {
-			dict[pkgName] = []item{{Name: elem.Name()}}
+			dict[pkgName] = []*Item{{Name: elem.Name()}}
 		}
 	}
 
@@ -63,7 +67,7 @@ func groupList() (groups []group) {
 			less = items[i].Name < items[j].Name
 			return
 		})
-		groups = append(groups, group{v, items})
+		groups = append(groups, &Group{v, items})
 	}
 	return
 }
