@@ -25,7 +25,7 @@ func authHandler() gin.HandlerFunc {
 				ID: sessionid,
 			}
 			if err := db.First(session).Error; err == nil && time.Now().Before(session.ExpireDate) {
-				c.Set("user", session.User)
+				c.Set("session", session)
 			}
 		}
 		c.Next()
@@ -52,17 +52,43 @@ func signinHandler() gin.HandlerFunc {
 			c.AbortWithError(http.StatusBadRequest, err)
 			return
 		}
-		user := &auth.User{Username: form.Username}
-		if err := db.First(user).Error; err != nil || bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(form.Password)) != nil {
+		user := auth.User{Username: form.Username}
+		if err := db.First(&user).Error; err != nil || bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(form.Password)) != nil {
 			c.JSON(http.StatusOK, gin.H{
 				"Code": ErrInvalidUsernameOrPassword,
 			})
 			return
 		}
 
+		// if a session found, clear it in db
+		if oldSession, found := c.Get("session"); found {
+			oldSession := oldSession.(*auth.Session)
+			if err := db.Delete(oldSession).Error; err != nil {
+				c.AbortWithStatus(http.StatusInternalServerError)
+				return
+			}
+		}
+
 		id, err := uuid.NewUUID()
 		util.LogFatal(err)
 		sessionid := strings.ToLower(strings.ReplaceAll(id.String(), "-", ""))
+
+		// save new session to db
+		newSession := &auth.Session{
+			ID:         sessionid,
+			UserID:     user.ID,
+			ExpireDate: time.Now().Add(3 * 24 * time.Hour),
+		}
+		if err := db.Create(newSession).Error; err != nil {
+			c.AbortWithStatus(http.StatusInternalServerError)
+			return
+		}
+
+		// save new session to request context
+		newSession.User = user
+		c.Set("session", newSession)
+
+		// save new sessionid to cookie
 		setCookieSessionid(c, sessionid)
 
 		c.JSON(http.StatusOK, gin.H{
@@ -82,6 +108,14 @@ func newRouter() *gin.Engine {
 	})
 	router.POST("signin", signinHandler())
 	router.GET("signout", func(c *gin.Context) {
+		// if a session found, clear it in db
+		if session, found := c.Get("session"); found {
+			session := session.(*auth.Session)
+			if err := db.Delete(session).Error; err != nil {
+				c.AbortWithStatus(http.StatusInternalServerError)
+				return
+			}
+		}
 		setCookieSessionid(c, "")
 		c.JSON(http.StatusOK, gin.H{"Code": 0})
 	})
