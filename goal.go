@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"sort"
+	"time"
 
 	"github.com/casbin/casbin/v2"
 	"github.com/casbin/casbin/v2/model"
@@ -103,11 +104,21 @@ func newTemplate() (tmpl *template.Template) {
 	return
 }
 
+func clearSessions(db *gorm.DB) {
+	ticker := time.NewTicker(60 * time.Second)
+	defer ticker.Stop()
+	for range ticker.C {
+		util.LogFatal(db.Delete(&auth.Session{}, "expire_date < ?", time.Now()).Error)
+	}
+}
+
 func OpenDB() (db *gorm.DB) {
 	db, err := gorm.Open(sqlite.Open(filepath.Join(WorkDir(), "db.sqlite3")), &gorm.Config{})
 	util.LogFatal(err)
 
 	util.LogFatal(db.AutoMigrate(Models()...))
+
+	go clearSessions(db)
 	return
 }
 
