@@ -93,7 +93,7 @@
             signin() {
               const that = this
               if (that.username && that.password) {
-                axios.post('/signin', {
+                axios.post('{{.SigninUrl}}', {
                   username: that.username,
                   password: that.password
                 }).then((res) => {
@@ -102,7 +102,7 @@
                   } else {
                     that.alert('Signed in', 'success')
                     setTimeout(() => {
-                      window.location.href = '/'
+                      window.location.href = '{{.HomeUrl}}'
                     }, 1000)
                   }
                 }).catch((err) => {

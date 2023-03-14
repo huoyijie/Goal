@@ -132,6 +132,7 @@ func Run(port int, host string) {
 
 	enforcer, err = casbin.NewEnforcer(model, adapter)
 	util.LogFatal(err)
+	util.LogFatal(enforcer.LoadPolicy())
 
 	router := newRouter()
 	router.Run(fmt.Sprintf("%s:%d", host, port))

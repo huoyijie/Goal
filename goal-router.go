@@ -44,7 +44,7 @@ func signinRequiredMiddleware(c *gin.Context) {
 				"Code": ErrUnauthorized,
 			})
 		} else {
-			c.Redirect(http.StatusFound, "/signin")
+			c.Redirect(http.StatusFound, "/admin/signin")
 		}
 	}
 	c.Next()
@@ -63,56 +63,54 @@ type SigninForm struct {
 	Password string `json:"password" binding:"required"`
 }
 
-func signinHandler() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		form := &SigninForm{}
-		if err := c.BindJSON(form); err != nil {
-			c.AbortWithError(http.StatusBadRequest, err)
-			return
-		}
-		user := auth.User{Username: form.Username}
-		if err := db.First(&user).Error; err != nil || bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(form.Password)) != nil {
-			c.JSON(http.StatusOK, gin.H{
-				"Code": ErrInvalidUsernameOrPassword,
-			})
-			return
-		}
+func signinHandler(c *gin.Context) {
+	form := &SigninForm{}
+	if err := c.BindJSON(form); err != nil {
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+	user := auth.User{Username: form.Username}
+	if err := db.First(&user).Error; err != nil || bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(form.Password)) != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"Code": ErrInvalidUsernameOrPassword,
+		})
+		return
+	}
 
-		// if a session found, clear it in db
-		if oldSession, found := c.Get("session"); found {
-			oldSession := oldSession.(*auth.Session)
-			if err := db.Delete(oldSession).Error; err != nil {
-				c.AbortWithStatus(http.StatusInternalServerError)
-				return
-			}
-		}
-
-		id, err := uuid.NewUUID()
-		util.LogFatal(err)
-		sessionid := strings.ToLower(strings.ReplaceAll(id.String(), "-", ""))
-
-		// save new session to db
-		newSession := &auth.Session{
-			ID:         sessionid,
-			UserID:     user.ID,
-			ExpireDate: time.Now().Add(3 * 24 * time.Hour),
-		}
-		if err := db.Create(newSession).Error; err != nil {
+	// if a session found, clear it in db
+	if oldSession, found := c.Get("session"); found {
+		oldSession := oldSession.(*auth.Session)
+		if err := db.Delete(oldSession).Error; err != nil {
 			c.AbortWithStatus(http.StatusInternalServerError)
 			return
 		}
-
-		// save new session to request context
-		newSession.User = user
-		c.Set("session", newSession)
-
-		// save new sessionid to cookie
-		setCookieSessionid(c, sessionid)
-
-		c.JSON(http.StatusOK, gin.H{
-			"Code": 0,
-		})
 	}
+
+	id, err := uuid.NewUUID()
+	util.LogFatal(err)
+	sessionid := strings.ToLower(strings.ReplaceAll(id.String(), "-", ""))
+
+	// save new session to db
+	newSession := &auth.Session{
+		ID:         sessionid,
+		UserID:     user.ID,
+		ExpireDate: time.Now().Add(3 * 24 * time.Hour),
+	}
+	if err := db.Create(newSession).Error; err != nil {
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
+	// save new session to request context
+	newSession.User = user
+	c.Set("session", newSession)
+
+	// save new sessionid to cookie
+	setCookieSessionid(c, sessionid)
+
+	c.JSON(http.StatusOK, gin.H{
+		"Code": 0,
+	})
 }
 
 func newRouter() *gin.Engine {
@@ -120,12 +118,16 @@ func newRouter() *gin.Engine {
 	router.SetTrustedProxies(nil)
 	router.SetHTMLTemplate(newTemplate())
 	router.Use(authMiddleware)
+	adminGroup := router.Group("admin")
 
-	anonymousGroup := router.Group("")
+	anonymousGroup := adminGroup.Group("")
 	anonymousGroup.GET("signin", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "signin.htm", gin.H{})
+		c.HTML(http.StatusOK, "signin.htm", gin.H{
+			"SigninUrl": "/admin/signin",
+			"HomeUrl": "/admin/",
+		})
 	})
-	anonymousGroup.POST("signin", signinHandler())
+	anonymousGroup.POST("signin", signinHandler)
 	anonymousGroup.GET("signout", func(c *gin.Context) {
 		// if a session found, clear it in db
 		if session, found := c.Get("session"); found {
@@ -139,9 +141,10 @@ func newRouter() *gin.Engine {
 		c.JSON(http.StatusOK, gin.H{"Code": 0})
 	})
 
-	signinRequiredGroup := router.Group("", signinRequiredMiddleware)
+	signinRequiredGroup := adminGroup.Group("", signinRequiredMiddleware)
 	signinRequiredGroup.GET("/", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "index.htm", gin.H{})
 	})
+
 	return router
 }
