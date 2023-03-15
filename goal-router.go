@@ -79,17 +79,24 @@ func authorizeMiddleware(c *gin.Context) {
 	c.AbortWithStatus(http.StatusUnauthorized)
 }
 
-func setCookieSessionid(c *gin.Context, sessionid string) {
-	expireIn := 3 * 24 * 60 * 60
+func setCookieSessionid(c *gin.Context, sessionid string, rememberMe bool) {
+	// keep g_sessionid until the browser closed
+	maxAge := 0
+
 	if len(sessionid) == 0 {
-		expireIn = -1
+		// sign out: delete g_sessionid right now
+		maxAge = -1
+	} else if rememberMe {
+		// sign in: remember me was checked
+		maxAge = 3 * 24 * 60 * 60
 	}
-	c.SetCookie("g_sessionid", sessionid, expireIn, "/", "127.0.0.1", false, true)
+	c.SetCookie("g_sessionid", sessionid, maxAge, "/", "127.0.0.1", false, true)
 }
 
 type SigninForm struct {
-	Username string `json:"username" binding:"required,alphanum,min=3,max=40"`
-	Password string `json:"password" binding:"required"`
+	Username   string `json:"username" binding:"required,alphanum,min=3,max=40"`
+	Password   string `json:"password" binding:"required"`
+	RememberMe bool   `json:"rememberMe"`
 }
 
 func signinHandler(c *gin.Context) {
@@ -136,7 +143,7 @@ func signinHandler(c *gin.Context) {
 	c.Set("session", newSession)
 
 	// save new sessionid to cookie
-	setCookieSessionid(c, sessionid)
+	setCookieSessionid(c, sessionid, form.RememberMe)
 
 	c.JSON(http.StatusOK, gin.H{
 		"Code": 0,
@@ -175,7 +182,7 @@ func newRouter() *gin.Engine {
 				return
 			}
 		}
-		setCookieSessionid(c, "")
+		setCookieSessionid(c, "", false)
 		c.JSON(http.StatusOK, gin.H{"Code": 0})
 	})
 
