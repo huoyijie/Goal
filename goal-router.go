@@ -76,9 +76,11 @@ func authorizeMiddleware(c *gin.Context) {
 			return
 		}
 		// has permission
-		if ok, err := enforcer.Enforce(session.UserID, obj, action); err == nil && ok {
-			c.Next()
-			return
+		for _, role := range session.User.Roles {
+			if ok, err := enforcer.Enforce(role.ID, obj, action); err == nil && ok {
+				c.Next()
+				return
+			}
 		}
 	}
 	c.AbortWithStatus(http.StatusUnauthorized)
@@ -187,8 +189,13 @@ func newRouter() *gin.Engine {
 						return true
 					}
 					obj := strings.ToLower(fmt.Sprintf("%s.%s", group.Name, item.Name))
-					ok, err := enforcer.Enforce(session.UserID, obj, act)
-					return err == nil && ok
+
+					for _, role := range session.User.Roles {
+						if ok, err := enforcer.Enforce(role.ID, obj, act); err == nil && ok {
+							return true
+						}
+					}
+					return false
 				}
 				if can("add") {
 					item.CanAdd = true
