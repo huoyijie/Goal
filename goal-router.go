@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/huoyijie/goal/auth"
@@ -17,11 +18,10 @@ type Code int
 
 const (
 	ErrInvalidUsernameOrPassword Code = -(iota + 10000)
-	ErrUnauthorized
 )
 
 func authMiddleware(c *gin.Context) {
-	if sessionid, err := c.Cookie("sessionid"); err == nil {
+	if sessionid, err := c.Cookie("g_sessionid"); err == nil {
 		session := &auth.Session{
 			ID: sessionid,
 		}
@@ -47,14 +47,7 @@ func getSession(c *gin.Context) *auth.Session {
 
 func signinRequiredMiddleware(c *gin.Context) {
 	if anonymous(c) {
-		contentType := c.GetHeader("Content-Type")
-		if strings.EqualFold(contentType, "application/json") {
-			c.JSON(http.StatusUnauthorized, gin.H{
-				"Code": ErrUnauthorized,
-			})
-		} else {
-			c.Redirect(http.StatusFound, "/admin/signin")
-		}
+		c.AbortWithStatus(http.StatusUnauthorized)
 	}
 	c.Next()
 }
@@ -91,7 +84,7 @@ func setCookieSessionid(c *gin.Context, sessionid string) {
 	if len(sessionid) == 0 {
 		expireIn = -1
 	}
-	c.SetCookie("sessionid", sessionid, expireIn, "/", "127.0.0.1", false, true)
+	c.SetCookie("g_sessionid", sessionid, expireIn, "/", "127.0.0.1", false, true)
 }
 
 type SigninForm struct {
@@ -154,6 +147,14 @@ func newRouter() *gin.Engine {
 	router := gin.Default()
 	router.SetTrustedProxies(nil)
 	router.SetHTMLTemplate(newTemplate())
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://127.0.0.1:4000"},
+		AllowMethods:     []string{"GET"},
+		AllowHeaders:     []string{"Origin", "Content-Type"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
 	router.Use(authMiddleware)
 	adminGroup := router.Group("admin")
 
@@ -213,6 +214,42 @@ func newRouter() *gin.Engine {
 		}
 		c.HTML(http.StatusOK, "index.htm", gin.H{
 			"Groups": groups,
+		})
+	})
+	signinRequiredGroup.GET("/menus", func(c *gin.Context) {
+		session := getSession(c)
+		groups := groupList()
+		menus := []any{}
+		for _, group := range groups {
+			menu := gin.H{
+				"label": group.Name,
+			}
+			menuItems := []gin.H{}
+			for _, item := range group.Items {
+				can := func(act string) bool {
+					if session.User.IsSuperuser {
+						return true
+					}
+					obj := strings.ToLower(fmt.Sprintf("%s.%s", group.Name, item.Name))
+
+					for _, role := range session.User.Roles {
+						if ok, err := enforcer.Enforce(role.ID, obj, act); err == nil && ok {
+							return true
+						}
+					}
+					return false
+				}
+				if can("add") || can("delete") || can("change") || can("get") {
+					menuItems = append(menuItems, gin.H{
+						"label": item.Name,
+					})
+					menu["items"] = menuItems
+				}
+			}
+			menus = append(menus, menu)
+		}
+		c.JSON(http.StatusOK, gin.H{
+			"menus": menus,
 		})
 	})
 
