@@ -126,7 +126,7 @@ func OpenDB() (db *gorm.DB) {
 	return
 }
 
-func Run(port int, host string) {
+func Run(host string, port int) {
 	model, err := model.NewModelFromString(rbacModel)
 	util.LogFatal(err)
 
