@@ -146,7 +146,8 @@ func signinHandler(c *gin.Context) {
 	setCookieSessionid(c, sessionid, form.RememberMe)
 
 	c.JSON(http.StatusOK, gin.H{
-		"Code": 0,
+		"Code":     0,
+		"Username": user.Username,
 	})
 }
 
