@@ -3,6 +3,8 @@ package goal
 import (
 	"fmt"
 	"net/http"
+	"path/filepath"
+	"reflect"
 	"strings"
 	"time"
 
@@ -108,7 +110,7 @@ func signinHandler(c *gin.Context) {
 	user := auth.User{Username: form.Username}
 	if err := db.First(&user).Error; err != nil || bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(form.Password)) != nil {
 		c.JSON(http.StatusOK, gin.H{
-			"Code": ErrInvalidUsernameOrPassword,
+			"code": ErrInvalidUsernameOrPassword,
 		})
 		return
 	}
@@ -146,8 +148,8 @@ func signinHandler(c *gin.Context) {
 	setCookieSessionid(c, sessionid, form.RememberMe)
 
 	c.JSON(http.StatusOK, gin.H{
-		"Code":     0,
-		"Username": user.Username,
+		"code":     0,
+		"username": user.Username,
 	})
 }
 
@@ -157,11 +159,10 @@ func newRouter() *gin.Engine {
 	router.SetHTMLTemplate(newTemplate())
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://127.0.0.1:4000"},
-		AllowMethods:     []string{"GET"},
 		AllowHeaders:     []string{"Origin", "Content-Type"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
-		MaxAge:           12 * time.Hour,
+		MaxAge:           10 * time.Minute,
 	}))
 	router.Use(authMiddleware)
 	adminGroup := router.Group("admin")
@@ -184,7 +185,7 @@ func newRouter() *gin.Engine {
 			}
 		}
 		setCookieSessionid(c, "", false)
-		c.JSON(http.StatusOK, gin.H{"Code": 0})
+		c.JSON(http.StatusOK, gin.H{"code": 0})
 	})
 
 	signinRequiredGroup := adminGroup.Group("", signinRequiredMiddleware)
@@ -280,11 +281,40 @@ func newRouter() *gin.Engine {
 			return
 		}
 
-		c.HTML(http.StatusOK, fmt.Sprintf("%s.htm", action), gin.H{
-			"Action": action,
-			"Group":  group,
-			"Item":   item,
-			"Id":     id,
+		var model any
+		if strings.EqualFold(action, "get") {
+			for _, m := range Models() {
+				elem := reflect.TypeOf(m).Elem()
+				if strings.EqualFold(group, filepath.Base(elem.PkgPath())) && strings.EqualFold(item, elem.Name()) {
+					model = m
+					break
+				}
+			}
+		}
+
+		if model == nil {
+			c.AbortWithStatus(http.StatusBadRequest)
+			return
+		}
+
+		var records []map[string]any
+		if err := db.Model(model).Find(&records).Error; err != nil {
+			c.AbortWithStatus(http.StatusInternalServerError)
+			return
+		}
+
+		var columns []string
+		if len(records) > 0 {
+			for k := range records[0] {
+				columns = append(columns, k)
+			}
+		}
+		c.JSON(http.StatusOK, gin.H{
+			"code": 0,
+			"data": gin.H{
+				"records": records,
+				"columns": columns,
+			},
 		})
 	})
 	// 4.`/add/group/item`
@@ -292,7 +322,7 @@ func newRouter() *gin.Engine {
 	// 6.`/change/group/item/1`
 	modelGroup.POST("/:action/:group/:item/*id", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
-			"Code": 0,
+			"code": 0,
 		})
 	})
 
