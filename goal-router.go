@@ -299,16 +299,20 @@ func newRouter() *gin.Engine {
 			return
 		}
 
+		var columns []string
+		for i := 0; i < modelType.NumField(); i++ {
+			field := modelType.Field(i)
+			if field.Tag.Get("goal") != "hidden" {
+				columns = append(columns, field.Name)
+			}
+		}
+
 		records := reflect.New(reflect.SliceOf(modelType)).Interface()
 		if err := db.Model(model).Find(records).Error; err != nil {
 			c.AbortWithStatus(http.StatusInternalServerError)
 			return
 		}
 
-		var columns []string
-		for i := 0; i < modelType.NumField(); i++ {
-			columns = append(columns, modelType.Field(i).Name)
-		}
 		c.JSON(http.StatusOK, gin.H{
 			"code": 0,
 			"data": gin.H{

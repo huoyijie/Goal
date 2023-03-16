@@ -9,19 +9,19 @@ type User struct {
 
 	Username,
 	Email string `gorm:"unique"`
-	Password,
+	Password string `goal:"hidden"`
 
 	Firstname,
 	Lastname string
 
 	DateJoined time.Time
-	LastSignin  time.Time `gorm:"null"`
+	LastSignin time.Time `gorm:"null"`
 
 	IsSuperuser,
 	IsStaff,
 	IsActive bool
 
-	Roles []Role `gorm:"many2many:user_roles;"`
+	Roles []Role `gorm:"many2many:user_roles"`
 }
 
 type Role struct {
