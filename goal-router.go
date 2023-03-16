@@ -282,11 +282,13 @@ func newRouter() *gin.Engine {
 		}
 
 		var model any
+		var modelType reflect.Type
 		if strings.EqualFold(action, "get") {
 			for _, m := range Models() {
 				elem := reflect.TypeOf(m).Elem()
 				if strings.EqualFold(group, filepath.Base(elem.PkgPath())) && strings.EqualFold(item, elem.Name()) {
 					model = m
+					modelType = elem
 					break
 				}
 			}
@@ -297,17 +299,15 @@ func newRouter() *gin.Engine {
 			return
 		}
 
-		var records []map[string]any
-		if err := db.Model(model).Find(&records).Error; err != nil {
+		records := reflect.New(reflect.SliceOf(modelType)).Interface()
+		if err := db.Model(model).Find(records).Error; err != nil {
 			c.AbortWithStatus(http.StatusInternalServerError)
 			return
 		}
 
 		var columns []string
-		if len(records) > 0 {
-			for k := range records[0] {
-				columns = append(columns, k)
-			}
+		for i := 0; i < modelType.NumField(); i++ {
+			columns = append(columns, modelType.Field(i).Name)
 		}
 		c.JSON(http.StatusOK, gin.H{
 			"code": 0,
