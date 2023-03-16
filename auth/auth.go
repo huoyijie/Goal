@@ -12,10 +12,10 @@ type User struct {
 	Password string `goal:"hidden"`
 
 	Firstname,
-	Lastname string
+	Lastname string `goal:"hidden"`
 
-	DateJoined time.Time
-	LastSignin time.Time `gorm:"null"`
+	DateJoined,
+	LastSignin time.Time `gorm:"null" goal:"hidden"`
 
 	IsSuperuser,
 	IsStaff,
@@ -30,8 +30,8 @@ type Role struct {
 }
 
 type Session struct {
-	ID         string `gorm:"primaryKey;size:32"`
+	ID         string `gorm:"primaryKey"`
 	UserID     uint
-	User       User
+	User       User      `goal:"preload=Username"`
 	ExpireDate time.Time `gorm:"index"`
 }

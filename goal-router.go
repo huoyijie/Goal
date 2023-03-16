@@ -300,15 +300,24 @@ func newRouter() *gin.Engine {
 		}
 
 		var columns []string
+		var preloads [][]string
 		for i := 0; i < modelType.NumField(); i++ {
 			field := modelType.Field(i)
-			if field.Tag.Get("goal") != "hidden" {
+			goalTags := strings.Split(field.Tag.Get("goal"), ",")
+			if !util.Contains(goalTags, "hidden") {
 				columns = append(columns, field.Name)
+			}
+			if fname := util.GetWithPrefix(goalTags, "preload="); fname != "" {
+				preloads = append(preloads, []string{field.Name, fname})
 			}
 		}
 
 		records := reflect.New(reflect.SliceOf(modelType)).Interface()
-		if err := db.Model(model).Find(records).Error; err != nil {
+		tx := db.Model(model)
+		for _, preload := range preloads {
+			tx = tx.Preload(preload[0])
+		}
+		if err := tx.Find(records).Error; err != nil {
 			c.AbortWithStatus(http.StatusInternalServerError)
 			return
 		}
@@ -316,8 +325,9 @@ func newRouter() *gin.Engine {
 		c.JSON(http.StatusOK, gin.H{
 			"code": 0,
 			"data": gin.H{
-				"records": records,
-				"columns": columns,
+				"records":  records,
+				"columns":  columns,
+				"preloads": preloads,
 			},
 		})
 	})
