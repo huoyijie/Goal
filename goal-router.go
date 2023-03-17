@@ -253,42 +253,6 @@ func newRouter() *gin.Engine {
 	})
 
 	signinRequiredGroup := adminGroup.Group("", signinRequiredMiddleware)
-	signinRequiredGroup.GET("/", func(c *gin.Context) {
-		session := getSession(c)
-		groups := groupList()
-		for _, group := range groups {
-			for _, item := range group.Items {
-				can := func(act string) bool {
-					if session.User.IsSuperuser {
-						return true
-					}
-					obj := strings.ToLower(fmt.Sprintf("%s.%s", group.Name, item.Name))
-
-					for _, role := range session.User.Roles {
-						if ok, err := enforcer.Enforce(role.ID, obj, act); err == nil && ok {
-							return true
-						}
-					}
-					return false
-				}
-				if can("add") {
-					item.CanAdd = true
-				}
-				if can("delete") {
-					item.CanDelete = true
-				}
-				if can("change") {
-					item.CanChange = true
-				}
-				if can("get") {
-					item.CanGet = true
-				}
-			}
-		}
-		c.HTML(http.StatusOK, "index.htm", gin.H{
-			"Groups": groups,
-		})
-	})
 	signinRequiredGroup.GET("/menus", func(c *gin.Context) {
 		session := getSession(c)
 		groups := groupList()
@@ -312,7 +276,7 @@ func newRouter() *gin.Engine {
 					}
 					return false
 				}
-				if can("add") || can("delete") || can("change") || can("get") {
+				if can("get") || can("post") || can("put") || can("delete") {
 					menuItems = append(menuItems, gin.H{
 						"label": item.Name,
 					})
