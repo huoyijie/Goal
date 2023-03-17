@@ -185,7 +185,7 @@ type Column struct {
 	Primary bool
 }
 
-func createOrUpdate(c *gin.Context, save func(any) *gorm.DB) {
+func crud(c *gin.Context, op byte) {
 	mt, _ := c.Get("modelType")
 	modelType := mt.(reflect.Type)
 
@@ -195,7 +195,17 @@ func createOrUpdate(c *gin.Context, save func(any) *gorm.DB) {
 		return
 	}
 
-	if err := save(record).Error; err != nil {
+	var tx *gorm.DB
+	switch op {
+	case 1:
+		tx = db.Create(record)
+	case 2:
+		tx = db.Save(record)
+	case 3:
+		tx = db.Delete(record)
+	}
+
+	if err := tx.Error; err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
@@ -379,11 +389,31 @@ func newRouter() *gin.Engine {
 		})
 	})
 	modelGroup.POST("/:group/:item", func(c *gin.Context) {
-		createOrUpdate(c, db.Create)
+		crud(c, 1)
 	})
 	modelGroup.PUT("/:group/:item", func(c *gin.Context) {
-		createOrUpdate(c, db.Save)
+		crud(c, 2)
 	})
-	modelGroup.DELETE("/:group/:item", func(c *gin.Context) {})
+	modelGroup.DELETE("/:group/:item", func(c *gin.Context) {
+		crud(c, 3)
+	})
+	modelGroup.DELETE("/:group/:item/batch", func(c *gin.Context) {
+		model, _ := c.Get("model")
+
+		ids := []uint{}
+		if err := c.BindJSON(&ids); err != nil {
+			c.AbortWithStatus(http.StatusInternalServerError)
+			return
+		}
+
+		if err := db.Delete(model, ids).Error; err != nil {
+			c.AbortWithStatus(http.StatusInternalServerError)
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"code": 0,
+		})
+	})
 	return router
 }
