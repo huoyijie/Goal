@@ -14,6 +14,7 @@ import (
 	"github.com/huoyijie/goal/auth"
 	"github.com/huoyijie/goal/util"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 type Code int
@@ -55,7 +56,7 @@ func signinRequiredMiddleware(c *gin.Context) {
 }
 
 func authorizeMiddleware(c *gin.Context) {
-	action := c.Param("action")
+	action := strings.ToLower(c.Request.Method)
 	group := c.Param("group")
 	item := c.Param("item")
 
@@ -79,6 +80,31 @@ func authorizeMiddleware(c *gin.Context) {
 		}
 	}
 	c.AbortWithStatus(http.StatusUnauthorized)
+}
+
+func validateModelMiddleware(c *gin.Context) {
+	group := c.Param("group")
+	item := c.Param("item")
+
+	var model any
+	var modelType reflect.Type
+	for _, m := range Models() {
+		elem := reflect.TypeOf(m).Elem()
+		if strings.EqualFold(group, filepath.Base(elem.PkgPath())) && strings.EqualFold(item, elem.Name()) {
+			model = m
+			modelType = elem
+			break
+		}
+	}
+
+	if model == nil {
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+
+	c.Set("model", model)
+	c.Set("modelType", modelType)
+	c.Next()
 }
 
 func setCookieSessionid(c *gin.Context, sessionid string, rememberMe bool) {
@@ -159,12 +185,34 @@ type Column struct {
 	Primary bool
 }
 
+func createOrUpdate(c *gin.Context, save func(any) *gorm.DB) {
+	mt, _ := c.Get("modelType")
+	modelType := mt.(reflect.Type)
+
+	record := reflect.New(modelType).Interface()
+	if err := c.BindJSON(record); err != nil {
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+
+	if err := save(record).Error; err != nil {
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"code": 0,
+		"data": record,
+	})
+}
+
 func newRouter() *gin.Engine {
 	router := gin.Default()
 	router.SetTrustedProxies(nil)
 	router.SetHTMLTemplate(newTemplate())
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://127.0.0.1:4000"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
@@ -268,42 +316,12 @@ func newRouter() *gin.Engine {
 		})
 	})
 
-	modelGroup := signinRequiredGroup.Group("", authorizeMiddleware)
-	// 1.`/get/group/item`
-	// 2.`/add/group/item`
-	// 3.`/change/group/item/1`
-	modelGroup.GET("/:action/:group/:item/*id", func(c *gin.Context) {
-		action := c.Param("action")
-		group := c.Param("group")
-		item := c.Param("item")
-		tmp := strings.Split(c.Param("id"), "/")
-		id := tmp[1]
+	modelGroup := signinRequiredGroup.Group("", authorizeMiddleware, validateModelMiddleware)
 
-		badId := len(tmp) != 2
-		badChange := action == "change" && id == ""
-		badGetOrAdd := (action == "get" || action == "add") && id != ""
-		if badId || badChange || badGetOrAdd {
-			c.AbortWithStatus(http.StatusBadRequest)
-			return
-		}
-
-		var model any
-		var modelType reflect.Type
-		if strings.EqualFold(action, "get") {
-			for _, m := range Models() {
-				elem := reflect.TypeOf(m).Elem()
-				if strings.EqualFold(group, filepath.Base(elem.PkgPath())) && strings.EqualFold(item, elem.Name()) {
-					model = m
-					modelType = elem
-					break
-				}
-			}
-		}
-
-		if model == nil {
-			c.AbortWithStatus(http.StatusBadRequest)
-			return
-		}
+	modelGroup.GET("/:group/:item", func(c *gin.Context) {
+		model, _ := c.Get("model")
+		mt, _ := c.Get("modelType")
+		modelType := mt.(reflect.Type)
 
 		var hiddens []string
 		var columns []Column
@@ -360,14 +378,12 @@ func newRouter() *gin.Engine {
 			},
 		})
 	})
-	// 4.`/add/group/item`
-	// 5.`/delete/group/item/1`
-	// 6.`/change/group/item/1`
-	modelGroup.POST("/:action/:group/:item/*id", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"code": 0,
-		})
+	modelGroup.POST("/:group/:item", func(c *gin.Context) {
+		createOrUpdate(c, db.Create)
 	})
-
+	modelGroup.PUT("/:group/:item", func(c *gin.Context) {
+		createOrUpdate(c, db.Save)
+	})
+	modelGroup.DELETE("/:group/:item", func(c *gin.Context) {})
 	return router
 }

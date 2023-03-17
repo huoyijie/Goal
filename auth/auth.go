@@ -25,8 +25,8 @@ type User struct {
 }
 
 type Role struct {
-	ID   uint `gorm:"primaryKey"`
-	Name string
+	ID   uint   `gorm:"primaryKey"`
+	Name string `gorm:"unique"`
 }
 
 type Session struct {
