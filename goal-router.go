@@ -153,6 +153,12 @@ func signinHandler(c *gin.Context) {
 	})
 }
 
+type Column struct {
+	Name    string
+	Type    string
+	Primary bool
+}
+
 func newRouter() *gin.Engine {
 	router := gin.Default()
 	router.SetTrustedProxies(nil)
@@ -300,7 +306,7 @@ func newRouter() *gin.Engine {
 		}
 
 		var hiddens []string
-		var columns []string
+		var columns []Column
 		var preloads [][]string
 		for i := 0; i < modelType.NumField(); i++ {
 			field := modelType.Field(i)
@@ -308,7 +314,9 @@ func newRouter() *gin.Engine {
 			if util.Contains(goalTags, "hidden") {
 				hiddens = append(hiddens, field.Name)
 			} else {
-				columns = append(columns, field.Name)
+				gormTags := strings.Split(field.Tag.Get("gorm"), ",")
+				primary := util.Contains(gormTags, "primaryKey")
+				columns = append(columns, Column{field.Name, field.Type.Name(), primary})
 			}
 			if fname := util.GetWithPrefix(goalTags, "preload="); fname != "" {
 				preloads = append(preloads, []string{field.Name, fname})
