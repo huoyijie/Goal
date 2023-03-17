@@ -325,19 +325,21 @@ func newRouter() *gin.Engine {
 			return
 		}
 
-		recordsVal := reflect.ValueOf(records).Elem()
-		for i := 0; i < recordsVal.Len(); i++ {
-			recordVal := recordsVal.Index(i)
-			for _, hidden := range hiddens {
-				hiddenField := recordVal.FieldByName(hidden)
-				hiddenField.SetZero()
-			}
-			for _, preload := range preloads {
-				preloadField := recordVal.FieldByName(preload[0])
-				dstFF := preloadField.FieldByName(preload[1])
-				dstVal := dstFF.Interface()
-				preloadField.SetZero()
-				dstFF.Set(reflect.ValueOf(dstVal))
+		if len(hiddens) > 0 || len(preloads) > 0 {
+			recordsVal := reflect.ValueOf(records).Elem()
+			for i := 0; i < recordsVal.Len(); i++ {
+				recordVal := recordsVal.Index(i)
+				for _, hidden := range hiddens {
+					hiddenField := recordVal.FieldByName(hidden)
+					hiddenField.SetZero()
+				}
+				for _, preload := range preloads {
+					preloadField := recordVal.FieldByName(preload[0])
+					dstFF := preloadField.FieldByName(preload[1])
+					dstVal := dstFF.Interface()
+					preloadField.SetZero()
+					dstFF.Set(reflect.ValueOf(dstVal))
+				}
 			}
 		}
 
