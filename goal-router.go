@@ -299,12 +299,15 @@ func newRouter() *gin.Engine {
 			return
 		}
 
+		var hiddens []string
 		var columns []string
 		var preloads [][]string
 		for i := 0; i < modelType.NumField(); i++ {
 			field := modelType.Field(i)
 			goalTags := strings.Split(field.Tag.Get("goal"), ",")
-			if !util.Contains(goalTags, "hidden") {
+			if util.Contains(goalTags, "hidden") {
+				hiddens = append(hiddens, field.Name)
+			} else {
 				columns = append(columns, field.Name)
 			}
 			if fname := util.GetWithPrefix(goalTags, "preload="); fname != "" {
@@ -320,6 +323,22 @@ func newRouter() *gin.Engine {
 		if err := tx.Find(records).Error; err != nil {
 			c.AbortWithStatus(http.StatusInternalServerError)
 			return
+		}
+
+		recordsVal := reflect.ValueOf(records).Elem()
+		for i := 0; i < recordsVal.Len(); i++ {
+			recordVal := recordsVal.Index(i)
+			for _, hidden := range hiddens {
+				hiddenField := recordVal.FieldByName(hidden)
+				hiddenField.SetZero()
+			}
+			for _, preload := range preloads {
+				preloadField := recordVal.FieldByName(preload[0])
+				dstFF := preloadField.FieldByName(preload[1])
+				dstVal := dstFF.Interface()
+				preloadField.SetZero()
+				dstFF.Set(reflect.ValueOf(dstVal))
+			}
 		}
 
 		c.JSON(http.StatusOK, gin.H{
