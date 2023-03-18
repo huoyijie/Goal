@@ -289,11 +289,12 @@ func newRouter() *gin.Engine {
 				})
 			}
 		}
+		// todo
 		// roleId, _ := c.Params.Get("roleId");
 		// enforcer
 		c.JSON(http.StatusOK, gin.H{
 			"code": 0,
-			"data": perms,
+			"data": [][]Perm{perms, perms},
 		})
 	})
 
