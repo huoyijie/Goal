@@ -1,9 +1,8 @@
 package goal
 
 import (
-	"embed"
+	_ "embed"
 	"fmt"
-	"html/template"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -97,16 +96,8 @@ func WorkDir() (workDir string) {
 var db *gorm.DB
 var enforcer *casbin.Enforcer
 
-//go:embed templates/*
-var tmplFS embed.FS
-
 //go:embed rbac_model.conf
 var rbacModel string
-
-func newTemplate() (tmpl *template.Template) {
-	tmpl = template.Must(template.New("").ParseFS(tmplFS, "templates/*.htm"))
-	return
-}
 
 func clearSessions(db *gorm.DB) {
 	ticker := time.NewTicker(60 * time.Second)

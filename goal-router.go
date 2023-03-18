@@ -79,7 +79,7 @@ func authorizeMiddleware(c *gin.Context) {
 			}
 		}
 	}
-	c.AbortWithStatus(http.StatusUnauthorized)
+	c.AbortWithStatus(http.StatusForbidden)
 }
 
 func validateModelMiddleware(c *gin.Context) {
@@ -174,8 +174,8 @@ func signinHandler(c *gin.Context) {
 	setCookieSessionid(c, sessionid, form.RememberMe)
 
 	c.JSON(http.StatusOK, gin.H{
-		"code":     0,
-		"username": user.Username,
+		"code": 0,
+		"data": user.Username,
 	})
 }
 
@@ -219,7 +219,6 @@ func crud(c *gin.Context, op byte) {
 func newRouter() *gin.Engine {
 	router := gin.Default()
 	router.SetTrustedProxies(nil)
-	router.SetHTMLTemplate(newTemplate())
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://127.0.0.1:4000"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"},
@@ -232,12 +231,6 @@ func newRouter() *gin.Engine {
 	adminGroup := router.Group("admin")
 
 	anonymousGroup := adminGroup.Group("")
-	anonymousGroup.GET("signin", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "signin.htm", gin.H{
-			"SigninUrl": "/admin/signin",
-			"HomeUrl":   "/admin/",
-		})
-	})
 	anonymousGroup.POST("signin", signinHandler)
 	anonymousGroup.GET("signout", func(c *gin.Context) {
 		// if a session found, clear it in db
@@ -286,7 +279,8 @@ func newRouter() *gin.Engine {
 			menus = append(menus, menu)
 		}
 		c.JSON(http.StatusOK, gin.H{
-			"menus": menus,
+			"code": 0,
+			"data": menus,
 		})
 	})
 
