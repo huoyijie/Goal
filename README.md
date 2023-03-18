@@ -23,3 +23,7 @@ something like Django admin, lightweight, extensible
 Regex
 
 ## Frontend
+
+## TODO
+
+gin.H => Result type

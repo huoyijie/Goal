@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"fmt"
 	"time"
 )
 
@@ -11,17 +12,8 @@ type User struct {
 	Email string `gorm:"unique"`
 	Password string `goal:"hidden"`
 
-	Firstname,
-	Lastname string `goal:"hidden"`
-
-	DateJoined,
-	LastSignin time.Time `gorm:"null" goal:"hidden"`
-
 	IsSuperuser,
-	IsStaff,
 	IsActive bool
-
-	Roles []Role `gorm:"many2many:user_roles"`
 }
 
 type Role struct {
@@ -30,8 +22,13 @@ type Role struct {
 }
 
 type Session struct {
-	ID         string `gorm:"primaryKey"`
+	ID         uint   `gorm:"primaryKey"`
+	Key        string `gorm:"unique"`
 	UserID     uint
 	User       User      `goal:"preload=Username"`
 	ExpireDate time.Time `gorm:"index"`
+}
+
+func (s *Session) Sub() string {
+	return fmt.Sprintf("user-%d", s.UserID)
 }

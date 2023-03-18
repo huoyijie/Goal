@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/huoyijie/goal"
@@ -66,9 +65,7 @@ func main() {
 		Username:    user.Username,
 		Email:       user.Email,
 		Password:    string(bcryptHash),
-		DateJoined:  time.Now(),
 		IsSuperuser: true,
-		IsStaff:     true,
 		IsActive:    true,
 	}
 

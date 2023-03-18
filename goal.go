@@ -3,9 +3,7 @@ package goal
 import (
 	_ "embed"
 	"fmt"
-	"os"
 	"path/filepath"
-	"reflect"
 	"sort"
 	"time"
 
@@ -15,8 +13,6 @@ import (
 	"github.com/glebarez/sqlite"
 	"github.com/huoyijie/goal/auth"
 	"github.com/huoyijie/goal/util"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 	"gorm.io/gorm"
 )
 
@@ -26,71 +22,20 @@ var models = []any{
 	&auth.Session{},
 }
 
-type Item struct {
-	Name string
-	CanAdd,
-	CanDelete,
-	CanChange,
-	CanGet bool
-}
-
-type Group struct {
-	Name  string
-	Items []*Item
-}
-
-func groupList() (groups []*Group) {
-	dict := map[string][]*Item{}
-
-	for _, model := range models {
-		elem := reflect.TypeOf(model).Elem()
-		pkgName := cases.Title(language.Und).String(filepath.Base(elem.PkgPath()))
-		if items, ok := dict[pkgName]; ok {
-			dict[pkgName] = append(items, &Item{
-				Name: elem.Name(),
-			})
-		} else {
-			dict[pkgName] = []*Item{{Name: elem.Name()}}
-		}
-	}
-
-	keys := make([]string, 0, len(dict))
-	for k := range dict {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-
-	for _, v := range keys {
-		items := dict[v]
-		sort.Slice(items, func(i, j int) (less bool) {
-			less = items[i].Name < items[j].Name
-			return
-		})
-		groups = append(groups, &Group{v, items})
-	}
-	return
-}
-
 func Register(modelList ...any) {
 	models = append(models, modelList)
 }
 
 func Models() []any {
+	sort.Slice(models, func(i, j int) bool {
+		group1 := util.Group(models[i])
+		group2 := util.Group(models[j])
+		if group1 < group2 || (group1 == group2 && util.Item(models[i]) < util.Item(models[j])) {
+			return true
+		}
+		return false
+	})
 	return models
-}
-
-func HomeDir() (homeDir string) {
-	homeDir, err := os.UserHomeDir()
-	util.LogFatal(err)
-	return
-}
-
-func WorkDir() (workDir string) {
-	workDir = filepath.Join(HomeDir(), ".goal")
-	if _, err := os.Stat(workDir); os.IsNotExist(err) {
-		util.LogFatal(os.Mkdir(workDir, 00744))
-	}
-	return
 }
 
 var db *gorm.DB
@@ -108,7 +53,7 @@ func clearSessions(db *gorm.DB) {
 }
 
 func OpenDB() (db *gorm.DB) {
-	db, err := gorm.Open(sqlite.Open(filepath.Join(WorkDir(), "db.sqlite3")), &gorm.Config{})
+	db, err := gorm.Open(sqlite.Open(filepath.Join(util.WorkDir(), "db.sqlite3")), &gorm.Config{})
 	util.LogFatal(err)
 
 	util.LogFatal(db.AutoMigrate(Models()...))

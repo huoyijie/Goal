@@ -3,7 +3,6 @@ package goal
 import (
 	"fmt"
 	"net/http"
-	"path/filepath"
 	"reflect"
 	"strings"
 	"time"
@@ -26,9 +25,9 @@ const (
 func authMiddleware(c *gin.Context) {
 	if sessionid, err := c.Cookie("g_sessionid"); err == nil {
 		session := &auth.Session{
-			ID: sessionid,
+			Key: sessionid,
 		}
-		if err := db.Preload("User").First(session).Error; err == nil && time.Now().Before(session.ExpireDate) {
+		if err := db.Preload("User").Where(session).First(session).Error; err == nil && time.Now().Before(session.ExpireDate) {
 			c.Set("session", session)
 		}
 	}
@@ -57,10 +56,6 @@ func signinRequiredMiddleware(c *gin.Context) {
 
 func authorizeMiddleware(c *gin.Context) {
 	action := strings.ToLower(c.Request.Method)
-	group := c.Param("group")
-	item := c.Param("item")
-
-	obj := fmt.Sprintf("%s.%s", group, item)
 
 	session, found := c.Get("session")
 	if found {
@@ -72,11 +67,10 @@ func authorizeMiddleware(c *gin.Context) {
 			return
 		}
 		// has permission
-		for _, role := range session.User.Roles {
-			if ok, err := enforcer.Enforce(role.ID, obj, action); err == nil && ok {
-				c.Next()
-				return
-			}
+		model, _ := c.Get("model")
+		if ok, err := enforcer.Enforce(session.Sub(), util.Obj(model), action); err == nil && ok {
+			c.Next()
+			return
 		}
 	}
 	c.AbortWithStatus(http.StatusForbidden)
@@ -89,10 +83,9 @@ func validateModelMiddleware(c *gin.Context) {
 	var model any
 	var modelType reflect.Type
 	for _, m := range Models() {
-		elem := reflect.TypeOf(m).Elem()
-		if strings.EqualFold(group, filepath.Base(elem.PkgPath())) && strings.EqualFold(item, elem.Name()) {
+		if strings.EqualFold(group, util.Group(m)) && strings.EqualFold(item, util.Item(m)) {
 			model = m
-			modelType = elem
+			modelType = reflect.TypeOf(m).Elem()
 			break
 		}
 	}
@@ -156,7 +149,7 @@ func signinHandler(c *gin.Context) {
 
 	// save new session to db
 	newSession := &auth.Session{
-		ID:         sessionid,
+		Key:        sessionid,
 		UserID:     user.ID,
 		ExpireDate: time.Now().Add(3 * 24 * time.Hour),
 	}
@@ -216,6 +209,16 @@ func crud(c *gin.Context, op byte) {
 	})
 }
 
+type Menu struct {
+	Name  string `json:"label"`
+	Items []Menu `json:"items"`
+}
+
+type Perm struct {
+	Code,
+	Name string
+}
+
 func newRouter() *gin.Engine {
 	router := gin.Default()
 	router.SetTrustedProxies(nil)
@@ -248,43 +251,53 @@ func newRouter() *gin.Engine {
 	signinRequiredGroup := adminGroup.Group("", signinRequiredMiddleware)
 	signinRequiredGroup.GET("/menus", func(c *gin.Context) {
 		session := getSession(c)
-		groups := groupList()
-		menus := []any{}
-		for _, group := range groups {
-			menu := gin.H{
-				"label": group.Name,
-			}
-			menuItems := []gin.H{}
-			for _, item := range group.Items {
-				can := func(act string) bool {
-					if session.User.IsSuperuser {
-						return true
+		menus := []Menu{}
+		for _, m := range Models() {
+			if util.AllowAny(session, util.Obj(m), enforcer) {
+				var found bool
+				group := util.Group(m)
+				for i := range menus {
+					if menus[i].Name == group {
+						found = true
+						menus[i].Items = append(menus[i].Items, Menu{util.Item(m), nil})
+						break
 					}
-					obj := strings.ToLower(fmt.Sprintf("%s.%s", group.Name, item.Name))
-
-					for _, role := range session.User.Roles {
-						if ok, err := enforcer.Enforce(role.ID, obj, act); err == nil && ok {
-							return true
-						}
-					}
-					return false
 				}
-				if can("get") || can("post") || can("put") || can("delete") {
-					menuItems = append(menuItems, gin.H{
-						"label": item.Name,
-					})
-					menu["items"] = menuItems
+				if !found {
+					menus = append(menus, Menu{group, []Menu{{util.Item(m), nil}}})
 				}
 			}
-			menus = append(menus, menu)
 		}
 		c.JSON(http.StatusOK, gin.H{
 			"code": 0,
 			"data": menus,
 		})
 	})
+	signinRequiredGroup.GET("/perms/:roleId", func(c *gin.Context) {
+		if util.Allow(getSession(c), util.Obj(&auth.Role{}), "put", enforcer) {
+			c.Next()
+			return
+		}
+		c.AbortWithStatus(http.StatusForbidden)
+	}, func(c *gin.Context) {
+		var perms []Perm
+		for _, m := range Models() {
+			for _, act := range util.Actions() {
+				perms = append(perms, Perm{
+					Code: fmt.Sprintf("%s:%s", util.Obj(m), act),
+					Name: fmt.Sprintf("%s %s %s", act, util.Group(m), util.Item(m)),
+				})
+			}
+		}
+		// roleId, _ := c.Params.Get("roleId");
+		// enforcer
+		c.JSON(http.StatusOK, gin.H{
+			"code": 0,
+			"data": perms,
+		})
+	})
 
-	modelGroup := signinRequiredGroup.Group("", authorizeMiddleware, validateModelMiddleware)
+	modelGroup := signinRequiredGroup.Group("", validateModelMiddleware, authorizeMiddleware)
 
 	modelGroup.GET("/:group/:item", func(c *gin.Context) {
 		model, _ := c.Get("model")
