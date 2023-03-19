@@ -210,6 +210,12 @@ func crud(c *gin.Context, op byte) {
 	case 2:
 		tx = db.Save(record)
 	case 3:
+		switch r := record.(type) {
+		case *auth.Role:
+			enforcer.DeletePermissionsForUser(r.RoleID())
+		case *auth.User:
+			enforcer.DeleteRolesForUser(r.Sub())
+		}
 		tx = db.Delete(record)
 	}
 
@@ -356,11 +362,12 @@ func newRouter() *gin.Engine {
 			c.AbortWithStatus(http.StatusBadRequest)
 			return
 		}
+		var permissions [][]string
 		for _, perm := range selected {
-			if !enforcer.HasPermissionForUser(role.RoleID(), perm.Val()...) {
-				enforcer.AddPermissionForUser(role.RoleID(), perm.Val()...)
-			}
+			permissions = append(permissions, perm.Val())
 		}
+		enforcer.DeletePermissionsForUser(role.RoleID())
+		enforcer.AddPermissionsForUser(role.RoleID(), permissions...)
 		c.JSON(http.StatusOK, gin.H{"code": 0})
 	})
 	signinRequiredGroup.GET("roles/:userID", changeRolesMiddleware, func(c *gin.Context) {
@@ -421,11 +428,12 @@ func newRouter() *gin.Engine {
 			c.AbortWithStatus(http.StatusBadRequest)
 			return
 		}
+		var roles []string
 		for _, role := range selected {
-			if hasRole, _ := enforcer.HasRoleForUser(user.Sub(), role.RoleID()); !hasRole {
-				enforcer.AddRoleForUser(user.Sub(), role.RoleID())
-			}
+			roles = append(roles, role.RoleID())
 		}
+		enforcer.DeleteRolesForUser(user.Sub())
+		enforcer.AddRolesForUser(user.Sub(), roles)
 		c.JSON(http.StatusOK, gin.H{"code": 0})
 	})
 
@@ -507,6 +515,19 @@ func newRouter() *gin.Engine {
 		if err := c.BindJSON(&ids); err != nil {
 			c.AbortWithStatus(http.StatusInternalServerError)
 			return
+		}
+
+		switch model.(type) {
+		case *auth.Role:
+			for _, id := range ids {
+				role := auth.Role{ID: id}
+				enforcer.DeletePermissionsForUser(role.RoleID())
+			}
+		case *auth.User:
+			for _, id := range ids {
+				user := auth.User{ID: id}
+				enforcer.DeleteRolesForUser(user.Sub())
+			}
 		}
 
 		if err := db.Delete(model, ids).Error; err != nil {
