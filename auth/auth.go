@@ -16,9 +16,17 @@ type User struct {
 	IsActive bool
 }
 
+func (u *User) Sub() string {
+	return fmt.Sprintf("user-%d", u.ID)
+}
+
 type Role struct {
 	ID   uint   `gorm:"primaryKey"`
 	Name string `gorm:"unique"`
+}
+
+func (r *Role) RoleID() string {
+	return fmt.Sprintf("role-%d", r.ID)
 }
 
 type Session struct {
@@ -30,5 +38,5 @@ type Session struct {
 }
 
 func (s *Session) Sub() string {
-	return fmt.Sprintf("user-%d", s.UserID)
+	return s.User.Sub()
 }

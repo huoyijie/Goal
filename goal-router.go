@@ -100,6 +100,22 @@ func validateModelMiddleware(c *gin.Context) {
 	c.Next()
 }
 
+func changePermsMiddleware(c *gin.Context) {
+	if util.Allow(getSession(c), util.Obj(&auth.Role{}), "put", enforcer) {
+		c.Next()
+		return
+	}
+	c.AbortWithStatus(http.StatusForbidden)
+}
+
+func changeRolesMiddleware(c *gin.Context) {
+	if util.Allow(getSession(c), util.Obj(&auth.User{}), "put", enforcer) {
+		c.Next()
+		return
+	}
+	c.AbortWithStatus(http.StatusForbidden)
+}
+
 func setCookieSessionid(c *gin.Context, sessionid string, rememberMe bool) {
 	// keep g_sessionid until the browser closed
 	maxAge := 0
@@ -158,7 +174,6 @@ func signinHandler(c *gin.Context) {
 		return
 	}
 
-	// todo save user last_signin
 	// save new session to request context
 	newSession.User = user
 	c.Set("session", newSession)
@@ -219,6 +234,26 @@ type Perm struct {
 	Name string
 }
 
+func NewPerm(obj, action string) Perm {
+	arr := strings.Split(obj, ".")
+	return Perm{
+		Code: fmt.Sprintf("%s:%s", obj, action),
+		Name: fmt.Sprintf("%s %s %s", arr[0], arr[1], action),
+	}
+}
+
+func (p *Perm) Val() []string {
+	return strings.Split(p.Code, ":")
+}
+
+type PermsParam struct {
+	RoleID uint `uri:"roleID"`
+}
+
+type RolesParam struct {
+	UserID uint `uri:"userID"`
+}
+
 func newRouter() *gin.Engine {
 	router := gin.Default()
 	router.SetTrustedProxies(nil)
@@ -249,7 +284,7 @@ func newRouter() *gin.Engine {
 	})
 
 	signinRequiredGroup := adminGroup.Group("", signinRequiredMiddleware)
-	signinRequiredGroup.GET("/menus", func(c *gin.Context) {
+	signinRequiredGroup.GET("menus", func(c *gin.Context) {
 		session := getSession(c)
 		menus := []Menu{}
 		for _, m := range Models() {
@@ -273,34 +308,130 @@ func newRouter() *gin.Engine {
 			"data": menus,
 		})
 	})
-	signinRequiredGroup.GET("/perms/:roleId", func(c *gin.Context) {
-		if util.Allow(getSession(c), util.Obj(&auth.Role{}), "put", enforcer) {
-			c.Next()
+	signinRequiredGroup.GET("perms/:roleID", changePermsMiddleware, func(c *gin.Context) {
+		param := PermsParam{}
+		if err := c.BindUri(&param); err != nil {
+			c.AbortWithStatus(http.StatusBadRequest)
 			return
 		}
-		c.AbortWithStatus(http.StatusForbidden)
-	}, func(c *gin.Context) {
-		var perms []Perm
+
+		perms := []Perm{}
 		for _, m := range Models() {
 			for _, act := range util.Actions() {
-				perms = append(perms, Perm{
-					Code: fmt.Sprintf("%s:%s", util.Obj(m), act),
-					Name: fmt.Sprintf("%s %s %s", act, util.Group(m), util.Item(m)),
-				})
+				perms = append(perms, NewPerm(util.Obj(m), act))
 			}
 		}
-		// todo
-		// roleId, _ := c.Params.Get("roleId");
-		// enforcer
+
+		role := auth.Role{ID: param.RoleID}
+		permissions := enforcer.GetPermissionsForUser(role.RoleID())
+		rolePerms := []Perm{}
+		for _, p := range permissions {
+			rolePerms = append(rolePerms, NewPerm(p[1], p[2]))
+		}
+
+		availablePerms := []Perm{}
+	outer:
+		for _, p1 := range perms {
+			for _, p2 := range rolePerms {
+				if p2.Code == p1.Code {
+					continue outer
+				}
+			}
+			availablePerms = append(availablePerms, p1)
+		}
 		c.JSON(http.StatusOK, gin.H{
 			"code": 0,
-			"data": [][]Perm{perms, perms},
+			"data": [][]Perm{availablePerms, rolePerms},
 		})
+	})
+	signinRequiredGroup.PUT("perms/:roleID", changePermsMiddleware, func(c *gin.Context) {
+		param := PermsParam{}
+		if err := c.BindUri(&param); err != nil {
+			c.AbortWithStatus(http.StatusBadRequest)
+			return
+		}
+		role := auth.Role{ID: param.RoleID}
+		var selected []Perm
+		if err := c.BindJSON(&selected); err != nil {
+			c.AbortWithStatus(http.StatusBadRequest)
+			return
+		}
+		for _, perm := range selected {
+			if !enforcer.HasPermissionForUser(role.RoleID(), perm.Val()...) {
+				enforcer.AddPermissionForUser(role.RoleID(), perm.Val()...)
+			}
+		}
+		c.JSON(http.StatusOK, gin.H{"code": 0})
+	})
+	signinRequiredGroup.GET("roles/:userID", changeRolesMiddleware, func(c *gin.Context) {
+		param := RolesParam{}
+		if err := c.BindUri(&param); err != nil {
+			c.AbortWithStatus(http.StatusBadRequest)
+			return
+		}
+
+		var roles []auth.Role
+		if err := db.Find(&roles).Error; err != nil {
+			c.AbortWithStatus(http.StatusInternalServerError)
+			return
+		}
+
+		user := auth.User{ID: param.UserID}
+		userRoles, err := enforcer.GetRolesForUser(user.Sub())
+		if err != nil {
+			c.AbortWithStatus(http.StatusInternalServerError)
+			return
+		}
+		selected := []uint{}
+		for _, p := range userRoles {
+			selected = append(selected, util.ParseRoleID(p))
+		}
+		selectedRoles := []auth.Role{}
+		if len(selected) > 0 {
+			if err := db.Find(&selectedRoles, selected).Error; err != nil {
+				c.AbortWithStatus(http.StatusInternalServerError)
+				return
+			}
+		}
+
+		availableRoles := []auth.Role{}
+	outer:
+		for _, p1 := range roles {
+			for _, p2 := range selectedRoles {
+				if p2.ID == p1.ID {
+					continue outer
+				}
+			}
+			availableRoles = append(availableRoles, p1)
+		}
+		c.JSON(http.StatusOK, gin.H{
+			"code": 0,
+			"data": [][]auth.Role{availableRoles, selectedRoles},
+		})
+	})
+	signinRequiredGroup.PUT("roles/:userID", changeRolesMiddleware, func(c *gin.Context) {
+		param := RolesParam{}
+		if err := c.BindUri(&param); err != nil {
+			c.AbortWithStatus(http.StatusBadRequest)
+			return
+		}
+		user := auth.User{ID: param.UserID}
+		var selected []auth.Role
+		if err := c.BindJSON(&selected); err != nil {
+			c.AbortWithStatus(http.StatusBadRequest)
+			return
+		}
+		for _, role := range selected {
+			if hasRole, _ := enforcer.HasRoleForUser(user.Sub(), role.RoleID()); !hasRole {
+				enforcer.AddRoleForUser(user.Sub(), role.RoleID())
+			}
+		}
+		c.JSON(http.StatusOK, gin.H{"code": 0})
 	})
 
 	modelGroup := signinRequiredGroup.Group("", validateModelMiddleware, authorizeMiddleware)
 
-	modelGroup.GET("/:group/:item", func(c *gin.Context) {
+	modelGroup.GET(":group/:item", func(c *gin.Context) {
 		model, _ := c.Get("model")
 		mt, _ := c.Get("modelType")
 		modelType := mt.(reflect.Type)
@@ -360,16 +491,16 @@ func newRouter() *gin.Engine {
 			},
 		})
 	})
-	modelGroup.POST("/:group/:item", func(c *gin.Context) {
+	modelGroup.POST(":group/:item", func(c *gin.Context) {
 		crud(c, 1)
 	})
-	modelGroup.PUT("/:group/:item", func(c *gin.Context) {
+	modelGroup.PUT(":group/:item", func(c *gin.Context) {
 		crud(c, 2)
 	})
-	modelGroup.DELETE("/:group/:item", func(c *gin.Context) {
+	modelGroup.DELETE(":group/:item", func(c *gin.Context) {
 		crud(c, 3)
 	})
-	modelGroup.DELETE("/:group/:item/batch", func(c *gin.Context) {
+	modelGroup.DELETE(":group/:item/batch", func(c *gin.Context) {
 		model, _ := c.Get("model")
 
 		ids := []uint{}

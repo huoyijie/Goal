@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/casbin/casbin/v2"
@@ -83,4 +84,10 @@ func Allow(session *auth.Session, obj, act string, enforcer *casbin.Enforcer) bo
 
 func AllowAny(session *auth.Session, obj string, enforcer *casbin.Enforcer) bool {
 	return Allow(session, obj, "get", enforcer) || Allow(session, obj, "post", enforcer) || Allow(session, obj, "put", enforcer) || Allow(session, obj, "delete", enforcer)
+}
+
+func ParseRoleID(roleID string) uint {
+	idStr := strings.Split(roleID, "-")[1]
+	id, _ := strconv.ParseUint(idStr, 10, 0)
+	return uint(id)
 }
