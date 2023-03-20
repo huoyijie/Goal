@@ -527,11 +527,13 @@ func newRouter() *gin.Engine {
 			for _, id := range ids {
 				role := auth.Role{ID: id}
 				enforcer.DeletePermissionsForUser(role.RoleID())
+				enforcer.DeleteRole(role.RoleID())
 			}
 		case *auth.User:
 			for _, id := range ids {
 				user := auth.User{ID: id}
 				enforcer.DeleteRolesForUser(user.Sub())
+				enforcer.DeleteUser(user.Sub())
 			}
 		}
 
