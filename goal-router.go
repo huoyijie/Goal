@@ -485,9 +485,12 @@ func newRouter() *gin.Engine {
 				}
 				for _, column := range preloads {
 					preloadField := recordVal.FieldByName(column.Name)
+					pk := preloadField.Field(0)
+					pkVal := pk.Interface()
 					dstFF := preloadField.FieldByName(column.PreloadField)
 					dstVal := dstFF.Interface()
 					preloadField.SetZero()
+					pk.Set(reflect.ValueOf(pkVal))
 					dstFF.Set(reflect.ValueOf(dstVal))
 				}
 			}
