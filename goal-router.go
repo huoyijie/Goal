@@ -191,7 +191,8 @@ type Column struct {
 	Type string
 	Primary,
 	Preload bool
-	PreloadField string
+	PreloadField,
+	ValidateRule string
 }
 
 func crud(c *gin.Context, op byte) {
@@ -457,7 +458,8 @@ func newRouter() *gin.Engine {
 				gormTags := strings.Split(field.Tag.Get("gorm"), ",")
 				primary := util.Contains(gormTags, "primaryKey")
 				preloadField := util.GetWithPrefix(goalTags, "preload=")
-				column := Column{field.Name, field.Type.Name(), primary, preloadField != "", preloadField}
+				validateRule := field.Tag.Get("binding")
+				column := Column{field.Name, field.Type.Name(), primary, preloadField != "", preloadField, validateRule}
 				columns = append(columns, column)
 				if column.Preload {
 					preloads = append(preloads, column)

@@ -30,11 +30,11 @@ func (r *Role) RoleID() string {
 }
 
 type Session struct {
-	ID         uint   `gorm:"primaryKey"`
-	Key        string `binding:"required,alphanum,length=32" gorm:"unique"`
-	UserID     uint
-	User       User      `goal:"preload=Username"`
-	ExpireDate time.Time `gorm:"index"`
+	ID         uint      `gorm:"primaryKey"`
+	Key        string    `binding:"required,alphanum,len=32" gorm:"unique"`
+	UserID     uint      `binding:"required"`
+	User       User      `binding:"-" goal:"preload=Username"`
+	ExpireDate time.Time `binding:"required" gorm:"index"`
 }
 
 func (s *Session) Sub() string {
