@@ -14,11 +14,6 @@ import (
 	"golang.org/x/term"
 )
 
-type User struct {
-	Username string `validate:"required,alphanum,min=3,max=40"`
-	Email    string `validate:"required,email"`
-}
-
 func readPassword() (pw []byte) {
 	pw, err := term.ReadPassword(int(os.Stdin.Fd()))
 	util.LogFatal(err)
@@ -26,7 +21,7 @@ func readPassword() (pw []byte) {
 }
 
 func main() {
-	var user User
+	var user auth.User
 	flag.StringVar(&user.Username, "username", "", "username of the superuser")
 	flag.StringVar(&user.Email, "email", "", "email of the superuser")
 	flag.Parse()
