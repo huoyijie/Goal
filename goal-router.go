@@ -159,9 +159,8 @@ func signinHandler(c *gin.Context) {
 		}
 	}
 
-	id, err := uuid.NewUUID()
-	util.LogFatal(err)
-	sessionid := strings.ToLower(strings.ReplaceAll(id.String(), "-", ""))
+	id := uuid.New()
+	sessionid := strings.ReplaceAll(id.String(), "-", "")
 
 	// save new session to db
 	newSession := &auth.Session{
