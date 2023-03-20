@@ -188,9 +188,11 @@ func signinHandler(c *gin.Context) {
 }
 
 type Column struct {
-	Name    string
-	Type    string
-	Primary bool
+	Name,
+	Type string
+	Primary,
+	Preload bool
+	PreloadField string
 }
 
 func crud(c *gin.Context, op byte) {
@@ -446,7 +448,7 @@ func newRouter() *gin.Engine {
 
 		var hiddens []string
 		var columns []Column
-		var preloads [][]string
+		var preloads []Column
 		for i := 0; i < modelType.NumField(); i++ {
 			field := modelType.Field(i)
 			goalTags := strings.Split(field.Tag.Get("goal"), ",")
@@ -455,17 +457,19 @@ func newRouter() *gin.Engine {
 			} else {
 				gormTags := strings.Split(field.Tag.Get("gorm"), ",")
 				primary := util.Contains(gormTags, "primaryKey")
-				columns = append(columns, Column{field.Name, field.Type.Name(), primary})
-			}
-			if fname := util.GetWithPrefix(goalTags, "preload="); fname != "" {
-				preloads = append(preloads, []string{field.Name, fname})
+				preloadField := util.GetWithPrefix(goalTags, "preload=")
+				column := Column{field.Name, field.Type.Name(), primary, preloadField != "", preloadField}
+				columns = append(columns, column)
+				if column.Preload {
+					preloads = append(preloads, column)
+				}
 			}
 		}
 
 		records := reflect.New(reflect.SliceOf(modelType)).Interface()
 		tx := db.Model(model)
-		for _, preload := range preloads {
-			tx = tx.Preload(preload[0])
+		for _, column := range preloads {
+			tx = tx.Preload(column.Name)
 		}
 		if err := tx.Find(records).Error; err != nil {
 			c.AbortWithStatus(http.StatusInternalServerError)
@@ -480,9 +484,9 @@ func newRouter() *gin.Engine {
 					hiddenField := recordVal.FieldByName(hidden)
 					hiddenField.SetZero()
 				}
-				for _, preload := range preloads {
-					preloadField := recordVal.FieldByName(preload[0])
-					dstFF := preloadField.FieldByName(preload[1])
+				for _, column := range preloads {
+					preloadField := recordVal.FieldByName(column.Name)
+					dstFF := preloadField.FieldByName(column.PreloadField)
 					dstVal := dstFF.Interface()
 					preloadField.SetZero()
 					dstFF.Set(reflect.ValueOf(dstVal))
@@ -493,9 +497,8 @@ func newRouter() *gin.Engine {
 		c.JSON(http.StatusOK, gin.H{
 			"code": 0,
 			"data": gin.H{
-				"records":  records,
-				"columns":  columns,
-				"preloads": preloads,
+				"columns": columns,
+				"records": records,
 			},
 		})
 	})
