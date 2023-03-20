@@ -459,7 +459,16 @@ func newRouter() *gin.Engine {
 				primary := util.Contains(gormTags, "primaryKey")
 				preloadField := util.GetWithPrefix(goalTags, "preload=")
 				validateRule := field.Tag.Get("binding")
-				column := Column{field.Name, field.Type.Name(), primary, preloadField != "", preloadField, validateRule}
+				fieldType := field.Type.Name()
+				switch field.Type.Kind() {
+				case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+					fieldType = "uint"
+				case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+					fieldType = "int"
+				case reflect.Float32, reflect.Float64:
+					fieldType = "float"
+				}
+				column := Column{field.Name, fieldType, primary, preloadField != "", preloadField, validateRule}
 				columns = append(columns, column)
 				if column.Preload {
 					preloads = append(preloads, column)

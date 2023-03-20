@@ -32,7 +32,7 @@ func (r *Role) RoleID() string {
 type Session struct {
 	ID         uint      `gorm:"primaryKey"`
 	Key        string    `binding:"required,alphanum,len=32" gorm:"unique"`
-	UserID     uint      `binding:"required"`
+	UserID     uint      `binding:"required,min=1"`
 	User       User      `binding:"-" goal:"preload=Username"`
 	ExpireDate time.Time `binding:"required" gorm:"index"`
 }
