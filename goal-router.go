@@ -1,6 +1,7 @@
 package goal
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"reflect"
@@ -139,7 +140,6 @@ type SigninForm struct {
 func signinHandler(c *gin.Context) {
 	form := &SigninForm{}
 	if err := c.BindJSON(form); err != nil {
-		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 	user := auth.User{Username: form.Username}
@@ -190,6 +190,7 @@ type Column struct {
 	Name,
 	Type string
 	Primary,
+	Unique,
 	Preload bool
 	PreloadField,
 	ValidateRule string
@@ -201,7 +202,6 @@ func crud(c *gin.Context, op byte) {
 
 	record := reflect.New(modelType).Interface()
 	if err := c.BindJSON(record); err != nil {
-		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 
@@ -361,7 +361,6 @@ func newRouter() *gin.Engine {
 		role := auth.Role{ID: param.RoleID}
 		var selected []Perm
 		if err := c.BindJSON(&selected); err != nil {
-			c.AbortWithStatus(http.StatusBadRequest)
 			return
 		}
 		var permissions [][]string
@@ -427,7 +426,6 @@ func newRouter() *gin.Engine {
 		user := auth.User{ID: param.UserID}
 		var selected []auth.Role
 		if err := c.BindJSON(&selected); err != nil {
-			c.AbortWithStatus(http.StatusBadRequest)
 			return
 		}
 		var roles []string
@@ -457,6 +455,7 @@ func newRouter() *gin.Engine {
 			} else {
 				gormTags := strings.Split(field.Tag.Get("gorm"), ",")
 				primary := util.Contains(gormTags, "primaryKey")
+				unique := util.Contains(gormTags, "unique")
 				preloadField := util.GetWithPrefix(goalTags, "preload=")
 				validateRule := field.Tag.Get("binding")
 				fieldType := field.Type.Name()
@@ -468,7 +467,7 @@ func newRouter() *gin.Engine {
 				case reflect.Float32, reflect.Float64:
 					fieldType = "float"
 				}
-				column := Column{field.Name, fieldType, primary, preloadField != "", preloadField, validateRule}
+				column := Column{field.Name, fieldType, primary, unique, preloadField != "", preloadField, validateRule}
 				columns = append(columns, column)
 				if column.Preload {
 					preloads = append(preloads, column)
@@ -529,7 +528,6 @@ func newRouter() *gin.Engine {
 
 		ids := []uint{}
 		if err := c.BindJSON(&ids); err != nil {
-			c.AbortWithStatus(http.StatusInternalServerError)
 			return
 		}
 
@@ -556,6 +554,27 @@ func newRouter() *gin.Engine {
 		c.JSON(http.StatusOK, gin.H{
 			"code": 0,
 		})
+	})
+	modelGroup.POST(":group/:item/exist", func(c *gin.Context) {
+		mt, _ := c.Get("modelType")
+		modelType := mt.(reflect.Type)
+
+		record := reflect.New(modelType).Interface()
+		c.ShouldBindJSON(record)
+
+		dbRecord := reflect.New(modelType).Interface()
+		// todo refactor hardcode by `ID`
+		err := db.Select("ID").Where(record).First(dbRecord).Error
+		if err == nil {
+			c.JSON(http.StatusOK, gin.H{"code": 0, "data": dbRecord})
+			return
+		}
+
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusOK, gin.H{"code": 0, "data": nil})
+			return
+		}
+		c.AbortWithStatus(http.StatusInternalServerError)
 	})
 	return router
 }
