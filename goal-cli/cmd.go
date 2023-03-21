@@ -10,7 +10,6 @@ import (
 	"github.com/huoyijie/goal"
 	"github.com/huoyijie/goal/auth"
 	"github.com/huoyijie/goal/util"
-	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/term"
 )
 
@@ -53,13 +52,10 @@ func main() {
 		util.LogFatal(err)
 	}
 
-	bcryptHash, err := bcrypt.GenerateFromPassword(rawPassword, 14)
-	util.LogFatal(err)
-
 	super := &auth.User{
 		Username:    user.Username,
 		Email:       user.Email,
-		Password:    string(bcryptHash),
+		Password:    util.BcryptHash(string(rawPassword)),
 		IsSuperuser: true,
 		IsActive:    true,
 	}

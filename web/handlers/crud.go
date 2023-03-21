@@ -8,8 +8,13 @@ import (
 	"github.com/casbin/casbin/v2"
 	"github.com/gin-gonic/gin"
 	"github.com/huoyijie/goal/auth"
+	"github.com/huoyijie/goal/util"
 	"github.com/huoyijie/goal/web"
 	"gorm.io/gorm"
+)
+
+const (
+	PASSWORD_PLACEHOLDER string = "password placeholder"
 )
 
 func crud(c *gin.Context, op byte, db *gorm.DB, enforcer *casbin.Enforcer) {
@@ -23,9 +28,20 @@ func crud(c *gin.Context, op byte, db *gorm.DB, enforcer *casbin.Enforcer) {
 
 	var tx *gorm.DB
 	switch op {
-	case 1:
-		tx = db.Create(record)
-	case 2:
+	case 1, 2:
+		switch r := record.(type) {
+		case *auth.User:
+			if op == 2 && r.Password == PASSWORD_PLACEHOLDER {
+				o := &auth.User{ID: r.ID}
+				if err := db.First(o).Error; err != nil {
+					c.AbortWithStatus(http.StatusInternalServerError)
+					return
+				}
+				r.Password = o.Password
+			} else {
+				r.Password = util.BcryptHash(r.Password)
+			}
+		}
 		tx = db.Save(record)
 	case 3:
 		switch r := record.(type) {
@@ -71,7 +87,11 @@ func CrudGet(db *gorm.DB) gin.HandlerFunc {
 			for i := 0; i < recordsVal.Len(); i++ {
 				recordVal := recordsVal.Index(i)
 				field := recordVal.FieldByName(c.Name)
-				field.SetZero()
+				if c.Type == "string" && c.Name == "Password" {
+					field.Set(reflect.ValueOf(PASSWORD_PLACEHOLDER))
+				} else {
+					field.SetZero()
+				}
 			}
 		}
 

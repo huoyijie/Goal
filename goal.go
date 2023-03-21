@@ -91,8 +91,8 @@ func (gw *goal_web_t) Router() *gin.Engine {
 	// `/admin/roles`
 	rolesGroup := signinRequiredGroup.Group("roles", middlewares.CanChangeRoles(gw.enforcer))
 	// `/admin/roles/:userID`
-	rolesGroup.GET("roles/:userID", handlers.GetRoles(gw.db, gw.enforcer))
-	rolesGroup.PUT("roles/:userID", handlers.ChangeRoles(gw.enforcer))
+	rolesGroup.GET(":userID", handlers.GetRoles(gw.db, gw.enforcer))
+	rolesGroup.PUT(":userID", handlers.ChangeRoles(gw.enforcer))
 
 	// `/admin/crud`
 	modelGroup := signinRequiredGroup.Group("crud", middlewares.ValidateModel(gw.getModels()), middlewares.Authorize(gw.enforcer))

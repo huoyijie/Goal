@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/glebarez/sqlite"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
@@ -52,4 +53,10 @@ func OpenSqliteDB() (db *gorm.DB) {
 	db, err := gorm.Open(sqlite.Open(filepath.Join(WorkDir(), "goal.db")), &gorm.Config{})
 	LogFatal(err)
 	return
+}
+
+func BcryptHash(rawPassword string) string {
+	bcryptHash, err := bcrypt.GenerateFromPassword([]byte(rawPassword), 14)
+	LogFatal(err)
+	return string(bcryptHash)
 }

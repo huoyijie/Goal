@@ -10,7 +10,7 @@ type User struct {
 
 	Username string `validate:"required,alphanum,min=3,max=40" binding:"required,alphanum,min=3,max=40" gorm:"unique"`
 	Email    string `validate:"required,email" binding:"required,email" gorm:"unique"`
-	Password string `goal:"hidden"`
+	Password string `validate:"required,min=8" binding:"required,min=8" goal:"hidden"`
 
 	IsSuperuser,
 	IsActive bool
