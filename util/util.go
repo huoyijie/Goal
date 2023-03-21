@@ -1,16 +1,13 @@
 package util
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"path/filepath"
-	"reflect"
-	"strconv"
 	"strings"
 
-	"github.com/casbin/casbin/v2"
-	"github.com/huoyijie/goal/auth"
+	"github.com/glebarez/sqlite"
+	"gorm.io/gorm"
 )
 
 func HomeDir() (homeDir string) {
@@ -51,43 +48,8 @@ func GetWithPrefix(elems []string, prefix string) string {
 	return ""
 }
 
-func Group(model any) string {
-	t := reflect.TypeOf(model).Elem()
-	return strings.ToLower(filepath.Base(t.PkgPath()))
-}
-
-func Item(model any) string {
-	t := reflect.TypeOf(model).Elem()
-	return strings.ToLower(t.Name())
-}
-
-func Obj(model any) string {
-	t := reflect.TypeOf(model).Elem()
-	group := strings.ToLower(filepath.Base(t.PkgPath()))
-	item := strings.ToLower(t.Name())
-	return fmt.Sprintf("%s.%s", group, item)
-}
-
-func Actions() []string {
-	return []string{"post", "delete", "put", "get"}
-}
-
-func Allow(session *auth.Session, obj, act string, enforcer *casbin.Enforcer) bool {
-	if session.User.IsSuperuser {
-		return true
-	}
-	if ok, err := enforcer.Enforce(session.Sub(), obj, act); err == nil && ok {
-		return true
-	}
-	return false
-}
-
-func AllowAny(session *auth.Session, obj string, enforcer *casbin.Enforcer) bool {
-	return Allow(session, obj, "get", enforcer) || Allow(session, obj, "post", enforcer) || Allow(session, obj, "put", enforcer) || Allow(session, obj, "delete", enforcer)
-}
-
-func ParseRoleID(roleID string) uint {
-	idStr := strings.Split(roleID, "-")[1]
-	id, _ := strconv.ParseUint(idStr, 10, 0)
-	return uint(id)
+func OpenSqliteDB() (db *gorm.DB) {
+	db, err := gorm.Open(sqlite.Open(filepath.Join(WorkDir(), "goal.db")), &gorm.Config{})
+	LogFatal(err)
+	return
 }

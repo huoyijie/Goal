@@ -56,7 +56,7 @@ func main() {
 	bcryptHash, err := bcrypt.GenerateFromPassword(rawPassword, 14)
 	util.LogFatal(err)
 
-	superuser := &auth.User{
+	super := &auth.User{
 		Username:    user.Username,
 		Email:       user.Email,
 		Password:    string(bcryptHash),
@@ -64,7 +64,5 @@ func main() {
 		IsActive:    true,
 	}
 
-	db := goal.OpenDB()
-	err = db.Create(superuser).Error
-	util.LogFatal(err)
+	goal.NewGoal(util.OpenSqliteDB()).NewSuper(super)
 }
