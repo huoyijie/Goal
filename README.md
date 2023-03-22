@@ -1,5 +1,6 @@
 # Goal
-a lightweight web framework like Django written in Golang.
+[Goal](https://github.com/huoyijie/Goal) is a lightweight web framework like Django written in Golang.
+[GoalUI](https://github.com/huoyijie/GoalUI)
 
 ## Package Auth
 
