@@ -12,9 +12,9 @@ const (
 )
 
 type SigninForm struct {
-	Username   string `json:"username" binding:"required,alphanum,min=3,max=40"`
-	Password   string `json:"password" binding:"required"`
-	RememberMe bool   `json:"rememberMe"`
+	Username   string `binding:"required,alphanum,min=3,max=40"`
+	Password   string `binding:"required,min=8"`
+	RememberMe bool
 }
 
 type Column struct {
