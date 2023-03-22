@@ -66,9 +66,12 @@ func crud(c *gin.Context, op byte, db *gorm.DB, enforcer *casbin.Enforcer) {
 
 func CrudPerms(enforcer *casbin.Enforcer) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		mt, _ := c.Get("modelType")
+		modelType := mt.(reflect.Type)
+		_, _, cols := web.Reflect(modelType)
+
 		session := web.GetSession(c)
 		model, _ := c.Get("model")
-
 		perms := gin.H{}
 		for _, act := range web.Actions() {
 			perms[act] = web.Allow(session, web.Obj(model), act, enforcer)
@@ -76,7 +79,10 @@ func CrudPerms(enforcer *casbin.Enforcer) gin.HandlerFunc {
 
 		c.JSON(http.StatusOK, gin.H{
 			"code": 0,
-			"data": perms,
+			"data": gin.H{
+				"cols":  cols,
+				"perms": perms,
+			},
 		})
 	}
 }
@@ -87,7 +93,7 @@ func CrudGet(db *gorm.DB) gin.HandlerFunc {
 		mt, _ := c.Get("modelType")
 		modelType := mt.(reflect.Type)
 
-		hiddens, preloads, columns := web.Reflect(modelType)
+		hiddens, preloads, cols := web.Reflect(modelType)
 
 		records := reflect.New(reflect.SliceOf(modelType)).Interface()
 		tx := db.Model(model)
@@ -130,7 +136,7 @@ func CrudGet(db *gorm.DB) gin.HandlerFunc {
 		c.JSON(http.StatusOK, gin.H{
 			"code": 0,
 			"data": gin.H{
-				"columns": columns,
+				"cols":    cols,
 				"records": records,
 			},
 		})
