@@ -64,6 +64,23 @@ func crud(c *gin.Context, op byte, db *gorm.DB, enforcer *casbin.Enforcer) {
 	})
 }
 
+func CrudPerms(enforcer *casbin.Enforcer) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		session := web.GetSession(c)
+		model, _ := c.Get("model")
+
+		perms := gin.H{}
+		for _, act := range web.Actions() {
+			perms[act] = web.Allow(session, web.Obj(model), act, enforcer)
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"code": 0,
+			"data": perms,
+		})
+	}
+}
+
 func CrudGet(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		model, _ := c.Get("model")
