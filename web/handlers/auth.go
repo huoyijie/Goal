@@ -19,7 +19,7 @@ func Signin(db *gorm.DB) gin.HandlerFunc {
 		if err := c.BindJSON(form); err != nil {
 			return
 		}
-		user := auth.User{Username: form.Username}
+		user := auth.User{Username: form.Username, IsActive: true}
 		if err := db.Where(&user).First(&user).Error; err != nil || bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(form.Password)) != nil {
 			c.JSON(http.StatusOK, gin.H{
 				"code": web.ErrInvalidUsernameOrPassword,
