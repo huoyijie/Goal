@@ -40,7 +40,7 @@ func Auth(db *gorm.DB) gin.HandlerFunc {
 }
 
 func SigninRequired(c *gin.Context) {
-	if _, found := c.Get("session"); !found {
+	if session := web.GetSession(c); session == nil {
 		c.AbortWithStatus(http.StatusUnauthorized)
 	}
 	c.Next()
@@ -74,8 +74,7 @@ func ValidateModel(models []any) gin.HandlerFunc {
 
 func Authorize(enforcer *casbin.Enforcer) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if session, found := c.Get("session"); found {
-			session := session.(*auth.Session)
+		if session := web.GetSession(c); session != nil {
 			model, _ := c.Get("model")
 			action := strings.ToLower(c.Request.Method)
 

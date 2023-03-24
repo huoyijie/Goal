@@ -67,6 +67,64 @@ func crud(c *gin.Context, action string, db *gorm.DB, enforcer *casbin.Enforcer)
 	})
 }
 
+func crudGet(c *gin.Context, db *gorm.DB, mine bool) {
+	model, _ := c.Get("model")
+	mt, _ := c.Get("modelType")
+	modelType := mt.(reflect.Type)
+	session := web.GetSession(c)
+
+	_, secrets, _, preloads, cols := web.Reflect(modelType)
+
+	records := reflect.New(reflect.SliceOf(modelType)).Interface()
+	tx := db.Model(model)
+	if mine {
+		tx = tx.Where("creator = ?", session.UserID)
+	}
+	for _, column := range preloads {
+		tx = tx.Joins(column.Name)
+	}
+	if err := tx.Find(records).Error; err != nil {
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
+	recordsVal := reflect.ValueOf(records).Elem()
+	for _, c := range secrets {
+		for i := 0; i < recordsVal.Len(); i++ {
+			recordVal := recordsVal.Index(i)
+			field := recordVal.FieldByName(c.Name)
+			if c.Type == "string" && c.Name == "Password" {
+				field.Set(reflect.ValueOf(PASSWORD_PLACEHOLDER))
+			} else {
+				field.SetZero()
+			}
+		}
+	}
+
+	for _, c := range preloads {
+		for i := 0; i < recordsVal.Len(); i++ {
+			recordVal := recordsVal.Index(i)
+			preloadVal := recordVal.FieldByName(c.Name)
+			// todo hardcode by `ID`
+			pk := preloadVal.FieldByName("ID")
+			pkVal := pk.Interface()
+			preloadField := preloadVal.FieldByName(c.PreloadField)
+			dstVal := preloadField.Interface()
+			preloadVal.SetZero()
+			pk.Set(reflect.ValueOf(pkVal))
+			preloadField.Set(reflect.ValueOf(dstVal))
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"code": 0,
+		"data": gin.H{
+			"cols":    cols,
+			"records": records,
+		},
+	})
+}
+
 func CrudPerms(enforcer *casbin.Enforcer) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		mt, _ := c.Get("modelType")
@@ -90,59 +148,15 @@ func CrudPerms(enforcer *casbin.Enforcer) gin.HandlerFunc {
 	}
 }
 
+func CrudGetMine(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		crudGet(c, db, true)
+	}
+}
+
 func CrudGet(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		model, _ := c.Get("model")
-		mt, _ := c.Get("modelType")
-		modelType := mt.(reflect.Type)
-
-		_, secrets, _, preloads, cols := web.Reflect(modelType)
-
-		records := reflect.New(reflect.SliceOf(modelType)).Interface()
-		tx := db.Model(model)
-		for _, column := range preloads {
-			tx = tx.Joins(column.Name)
-		}
-		if err := tx.Find(records).Error; err != nil {
-			c.AbortWithStatus(http.StatusInternalServerError)
-			return
-		}
-
-		recordsVal := reflect.ValueOf(records).Elem()
-		for _, c := range secrets {
-			for i := 0; i < recordsVal.Len(); i++ {
-				recordVal := recordsVal.Index(i)
-				field := recordVal.FieldByName(c.Name)
-				if c.Type == "string" && c.Name == "Password" {
-					field.Set(reflect.ValueOf(PASSWORD_PLACEHOLDER))
-				} else {
-					field.SetZero()
-				}
-			}
-		}
-
-		for _, c := range preloads {
-			for i := 0; i < recordsVal.Len(); i++ {
-				recordVal := recordsVal.Index(i)
-				preloadVal := recordVal.FieldByName(c.Name)
-				// todo hardcode by `ID`
-				pk := preloadVal.FieldByName("ID")
-				pkVal := pk.Interface()
-				preloadField := preloadVal.FieldByName(c.PreloadField)
-				dstVal := preloadField.Interface()
-				preloadVal.SetZero()
-				pk.Set(reflect.ValueOf(pkVal))
-				preloadField.Set(reflect.ValueOf(dstVal))
-			}
-		}
-
-		c.JSON(http.StatusOK, gin.H{
-			"code": 0,
-			"data": gin.H{
-				"cols":    cols,
-				"records": records,
-			},
-		})
+		crudGet(c, db, false)
 	}
 }
 

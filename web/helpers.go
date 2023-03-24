@@ -160,8 +160,7 @@ func ClearSessions(db *gorm.DB) {
 }
 
 func RecordOpLog(db *gorm.DB, c *gin.Context, record any, action string) {
-	s, _ := c.Get("session")
-	session := s.(*auth.Session)
+	session := GetSession(c)
 	pk := reflect.ValueOf(record).Elem().FieldByName("ID")
 	opLog := admin.OperationLog{
 		UserID:   session.UserID,
@@ -176,8 +175,7 @@ func RecordOpLog(db *gorm.DB, c *gin.Context, record any, action string) {
 }
 
 func RecordOpLogs(db *gorm.DB, c *gin.Context, ids []uint, action string) {
-	s, _ := c.Get("session")
-	session := s.(*auth.Session)
+	session := GetSession(c)
 	model, _ := c.Get("model")
 	var opLogs []admin.OperationLog
 	for _, objID := range ids {
@@ -196,8 +194,7 @@ func RecordOpLogs(db *gorm.DB, c *gin.Context, ids []uint, action string) {
 
 func AutowiredCreator(c *gin.Context, action string, record any) {
 	if action == "post" {
-		s, _ := c.Get("session")
-		session := s.(*auth.Session)
+		session := GetSession(c)
 		creatorField := reflect.ValueOf(record).Elem().FieldByName("Creator")
 		if creatorField.IsValid() {
 			creatorField.SetUint(uint64(session.UserID))

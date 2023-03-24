@@ -28,9 +28,8 @@ func Signin(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		// if a session found, clear it in db
-		if oldSession, found := c.Get("session"); found {
-			oldSession := oldSession.(*auth.Session)
-			if err := db.Delete(oldSession).Error; err != nil {
+		if session := web.GetSession(c); session != nil {
+			if err := db.Delete(session).Error; err != nil {
 				c.AbortWithStatus(http.StatusInternalServerError)
 				return
 			}
