@@ -100,7 +100,7 @@ func CrudGet(db *gorm.DB) gin.HandlerFunc {
 		records := reflect.New(reflect.SliceOf(modelType)).Interface()
 		tx := db.Model(model)
 		for _, column := range preloads {
-			tx = tx.Preload(column.Name)
+			tx = tx.Joins(column.Name)
 		}
 		if err := tx.Find(records).Error; err != nil {
 			c.AbortWithStatus(http.StatusInternalServerError)

@@ -31,7 +31,7 @@ func Auth(db *gorm.DB) gin.HandlerFunc {
 			session := &auth.Session{
 				Key: sessionid,
 			}
-			if err := db.Preload("User").Where(session).First(session).Error; err == nil && time.Now().Before(session.ExpireDate) {
+			if err := db.Joins("User").Where(session).First(session).Error; err == nil && time.Now().Before(session.ExpireDate) {
 				c.Set("session", session)
 			}
 		}
