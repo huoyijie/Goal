@@ -156,14 +156,13 @@ func ClearSessions(db *gorm.DB) {
 func RecordOpLog(db *gorm.DB, c *gin.Context, record any, action string) {
 	s, _ := c.Get("session")
 	session := s.(*auth.Session)
-	model, _ := c.Get("model")
 	pk := reflect.ValueOf(record).Elem().FieldByName("ID")
 	opLog := admin.OperationLog{
 		UserID:   session.UserID,
 		Date:     time.Now(),
 		IPAddr:   c.ClientIP(),
-		Group:    Group(model),
-		Item:     Item(model),
+		Group:    Group(record),
+		Item:     Item(record),
 		Action:   action,
 		ObjectID: uint(pk.Uint()),
 	}

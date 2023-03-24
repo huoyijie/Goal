@@ -88,26 +88,30 @@ func (gw *goal_web_t) Router() *gin.Engine {
 	permsGroup := signinRequiredGroup.Group("perms", middlewares.CanChangePerms(gw.enforcer))
 	// `/admin/perms/:roleID`
 	permsGroup.GET(":roleID", handlers.GetPerms(gw.getModels(), gw.enforcer))
-	permsGroup.PUT(":roleID", handlers.ChangePerms(gw.enforcer))
+	permsGroup.PUT(":roleID", handlers.ChangePerms(gw.db, gw.enforcer))
 
 	// `/admin/roles`
 	rolesGroup := signinRequiredGroup.Group("roles", middlewares.CanChangeRoles(gw.enforcer))
 	// `/admin/roles/:userID`
 	rolesGroup.GET(":userID", handlers.GetRoles(gw.db, gw.enforcer))
-	rolesGroup.PUT(":userID", handlers.ChangeRoles(gw.enforcer))
+	rolesGroup.PUT(":userID", handlers.ChangeRoles(gw.db, gw.enforcer))
 
 	// `/admin/crud`
 	crudGroup := signinRequiredGroup.Group("crud", middlewares.ValidateModel(gw.getModels()))
-	crudGroup.GET(":group/:item/perms", handlers.CrudPerms(gw.enforcer))
-
-	modelGroup := crudGroup.Group("", middlewares.Authorize(gw.enforcer))
 	// `/admin/crud/:group/:item`
-	modelGroup.GET(":group/:item", handlers.CrudGet(gw.db))
-	modelGroup.POST(":group/:item", handlers.CrudPost(gw.db, gw.enforcer))
-	modelGroup.PUT(":group/:item", handlers.CrudPut(gw.db, gw.enforcer))
-	modelGroup.DELETE(":group/:item", handlers.CrudDelete(gw.db, gw.enforcer))
-	modelGroup.DELETE(":group/:item/batch", handlers.CrudBatchDelete(gw.db, gw.enforcer))
-	modelGroup.POST(":group/:item/exist", handlers.CrudExist(gw.db))
+	modelGroup := crudGroup.Group(":group/:item")
+
+	// `/admin/crud/:group/:item/perms`
+	modelGroup.GET("perms", handlers.CrudPerms(gw.enforcer))
+
+	AuthorizeGroup := modelGroup.Group("", middlewares.Authorize(gw.enforcer))
+	// `/admin/crud/:group/:item`
+	AuthorizeGroup.GET("", handlers.CrudGet(gw.db))
+	AuthorizeGroup.POST("", handlers.CrudPost(gw.db, gw.enforcer))
+	AuthorizeGroup.PUT("", handlers.CrudPut(gw.db, gw.enforcer))
+	AuthorizeGroup.DELETE("", handlers.CrudDelete(gw.db, gw.enforcer))
+	AuthorizeGroup.DELETE("batch", handlers.CrudBatchDelete(gw.db, gw.enforcer))
+	AuthorizeGroup.POST("exist", handlers.CrudExist(gw.db))
 
 	go web.ClearSessions(gw.db)
 	return router

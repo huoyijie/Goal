@@ -57,7 +57,7 @@ func GetPerms(models []any, enforcer *casbin.Enforcer) gin.HandlerFunc {
 	}
 }
 
-func ChangePerms(enforcer *casbin.Enforcer) gin.HandlerFunc {
+func ChangePerms(db *gorm.DB, enforcer *casbin.Enforcer) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		param := web.PermsParam{}
 		if err := c.BindUri(&param); err != nil {
@@ -75,6 +75,7 @@ func ChangePerms(enforcer *casbin.Enforcer) gin.HandlerFunc {
 		}
 		enforcer.DeletePermissionsForUser(role.RoleID())
 		enforcer.AddPermissionsForUser(role.RoleID(), permissions...)
+		web.RecordOpLog(db, c, &role, "put")
 		c.JSON(http.StatusOK, gin.H{"code": 0})
 	}
 }
@@ -128,7 +129,7 @@ func GetRoles(db *gorm.DB, enforcer *casbin.Enforcer) gin.HandlerFunc {
 	}
 }
 
-func ChangeRoles(enforcer *casbin.Enforcer) gin.HandlerFunc {
+func ChangeRoles(db *gorm.DB, enforcer *casbin.Enforcer) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		param := web.RolesParam{}
 		if err := c.BindUri(&param); err != nil {
@@ -146,6 +147,7 @@ func ChangeRoles(enforcer *casbin.Enforcer) gin.HandlerFunc {
 		}
 		enforcer.DeleteRolesForUser(user.Sub())
 		enforcer.AddRolesForUser(user.Sub(), roles)
+		web.RecordOpLog(db, c, &user, "put")
 		c.JSON(http.StatusOK, gin.H{"code": 0})
 	}
 }
