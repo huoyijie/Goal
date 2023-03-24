@@ -29,6 +29,7 @@ func crud(c *gin.Context, action string, db *gorm.DB, enforcer *casbin.Enforcer)
 	var tx *gorm.DB
 	switch action {
 	case "post", "put":
+		web.AutowiredCreator(c, action, record)
 		switch r := record.(type) {
 		case *auth.User:
 			if action == "put" && r.Password == PASSWORD_PLACEHOLDER {
@@ -70,7 +71,7 @@ func CrudPerms(enforcer *casbin.Enforcer) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		mt, _ := c.Get("modelType")
 		modelType := mt.(reflect.Type)
-		_, _, _, cols := web.Reflect(modelType)
+		_, _, _, _, cols := web.Reflect(modelType)
 
 		session := web.GetSession(c)
 		model, _ := c.Get("model")
@@ -95,7 +96,7 @@ func CrudGet(db *gorm.DB) gin.HandlerFunc {
 		mt, _ := c.Get("modelType")
 		modelType := mt.(reflect.Type)
 
-		secrets, _, preloads, cols := web.Reflect(modelType)
+		_, secrets, _, preloads, cols := web.Reflect(modelType)
 
 		records := reflect.New(reflect.SliceOf(modelType)).Interface()
 		tx := db.Model(model)

@@ -20,6 +20,7 @@ type SigninForm struct {
 type Column struct {
 	Name,
 	Type string
+	Autowired,
 	Secret,
 	Hidden,
 	Primary,

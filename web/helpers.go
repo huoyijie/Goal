@@ -70,8 +70,9 @@ func FieldKind(field reflect.StructField) string {
 	return fieldType
 }
 
-func GetGoalTag(field reflect.StructField) (secret, hidden bool, preloadField string) {
+func GetGoalTag(field reflect.StructField) (autowired, secret, hidden bool, preloadField string) {
 	goalTag := strings.Split(field.Tag.Get("goal"), ",")
+	autowired = util.Contains(goalTag, "autowired")
 	secret = util.Contains(goalTag, "secret")
 	hidden = util.Contains(goalTag, "hidden")
 	preloadField = util.GetWithPrefix(goalTag, "preload=")
@@ -89,17 +90,18 @@ func GetBindingTag(field reflect.StructField) string {
 	return field.Tag.Get("binding")
 }
 
-func Reflect(modelType reflect.Type) (secrets, hiddens, preloads, columns []Column) {
+func Reflect(modelType reflect.Type) (autowireds, secrets, hiddens, preloads, columns []Column) {
 	for i := 0; i < modelType.NumField(); i++ {
 		field := modelType.Field(i)
 		fieldType := FieldKind(field)
 		primary, unique := GetGormTag(field)
 		validateRule := GetBindingTag(field)
-		secret, hidden, preloadField := GetGoalTag(field)
+		autowired, secret, hidden, preloadField := GetGoalTag(field)
 
 		column := Column{
 			Name:         field.Name,
 			Type:         fieldType,
+			Autowired:    autowired,
 			Secret:       secret,
 			Hidden:       hidden,
 			Primary:      primary,
@@ -109,6 +111,10 @@ func Reflect(modelType reflect.Type) (secrets, hiddens, preloads, columns []Colu
 			ValidateRule: validateRule,
 		}
 
+		if column.Autowired {
+			autowireds = append(autowireds, column)
+			continue
+		}
 		if column.Secret {
 			secrets = append(secrets, column)
 		}
@@ -186,4 +192,15 @@ func RecordOpLogs(db *gorm.DB, c *gin.Context, ids []uint, action string) {
 		})
 	}
 	db.Create(&opLogs)
+}
+
+func AutowiredCreator(c *gin.Context, action string, record any) {
+	if action == "post" {
+		s, _ := c.Get("session")
+		session := s.(*auth.Session)
+		creatorField := reflect.ValueOf(record).Elem().FieldByName("Creator")
+		if creatorField.IsValid() {
+			creatorField.SetUint(uint64(session.UserID))
+		}
+	}
 }

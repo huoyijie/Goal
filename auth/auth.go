@@ -14,6 +14,8 @@ type User struct {
 
 	IsSuperuser,
 	IsActive bool
+
+	Creator uint `goal:"autowired" gorm:"index"`
 }
 
 func (u *User) Sub() string {
@@ -23,6 +25,7 @@ func (u *User) Sub() string {
 type Role struct {
 	ID   uint   `gorm:"primaryKey"`
 	Name string `binding:"required,alphanum,min=3,max=40" gorm:"unique"`
+	Creator uint `goal:"autowired" gorm:"index"`
 }
 
 func (r *Role) RoleID() string {
