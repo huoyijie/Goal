@@ -171,7 +171,7 @@ func RecordOpLog(db *gorm.DB, c *gin.Context, record any, action string) {
 	opLog := admin.OperationLog{
 		UserID:   session.UserID,
 		Date:     time.Now(),
-		IPAddr:   c.ClientIP(),
+		IP:       c.ClientIP(),
 		Group:    Group(record),
 		Item:     Item(record),
 		Action:   action,
@@ -188,7 +188,7 @@ func RecordOpLogs(db *gorm.DB, c *gin.Context, ids []uint, action string) {
 		opLogs = append(opLogs, admin.OperationLog{
 			UserID:   session.UserID,
 			Date:     time.Now(),
-			IPAddr:   c.ClientIP(),
+			IP:       c.ClientIP(),
 			Group:    Group(model),
 			Item:     Item(model),
 			Action:   action,

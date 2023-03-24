@@ -11,7 +11,7 @@ type OperationLog struct {
 	UserID uint      `goal:"hidden"`
 	User   auth.User `goal:"preload=Username"`
 	Date   time.Time
-	IPAddr,
+	IP,
 	Group,
 	Item,
 	Action string
