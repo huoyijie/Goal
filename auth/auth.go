@@ -10,7 +10,7 @@ type User struct {
 
 	Username string `validate:"required,alphanum,min=3,max=40" binding:"required,alphanum,min=3,max=40" gorm:"unique"`
 	Email    string `validate:"required,email" binding:"required,email" gorm:"unique"`
-	Password string `validate:"required,min=8" binding:"required,min=8" goal:"hidden"`
+	Password string `validate:"required,min=8" binding:"required,min=8" goal:"secret,hidden"`
 
 	IsSuperuser,
 	IsActive bool
@@ -30,9 +30,9 @@ func (r *Role) RoleID() string {
 }
 
 type Session struct {
-	ID         uint      `gorm:"primaryKey"`
+	ID         uint      `goal:"hidden" gorm:"primaryKey"`
 	Key        string    `binding:"required,alphanum,len=32" gorm:"unique"`
-	UserID     uint      `binding:"required,min=1"`
+	UserID     uint      `binding:"required,min=1" goal:"hidden"`
 	User       User      `binding:"-" goal:"preload=Username"`
 	ExpireDate time.Time `binding:"required" gorm:"index"`
 }

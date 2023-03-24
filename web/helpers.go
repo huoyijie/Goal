@@ -70,8 +70,9 @@ func FieldKind(field reflect.StructField) string {
 	return fieldType
 }
 
-func GetGoalTag(field reflect.StructField) (hidden bool, preloadField string) {
+func GetGoalTag(field reflect.StructField) (secret, hidden bool, preloadField string) {
 	goalTag := strings.Split(field.Tag.Get("goal"), ",")
+	secret = util.Contains(goalTag, "secret")
 	hidden = util.Contains(goalTag, "hidden")
 	preloadField = util.GetWithPrefix(goalTag, "preload=")
 	return
@@ -88,17 +89,18 @@ func GetBindingTag(field reflect.StructField) string {
 	return field.Tag.Get("binding")
 }
 
-func Reflect(modelType reflect.Type) (hiddens, preloads, columns []Column) {
+func Reflect(modelType reflect.Type) (secrets, hiddens, preloads, columns []Column) {
 	for i := 0; i < modelType.NumField(); i++ {
 		field := modelType.Field(i)
 		fieldType := FieldKind(field)
 		primary, unique := GetGormTag(field)
 		validateRule := GetBindingTag(field)
-		hidden, preloadField := GetGoalTag(field)
+		secret, hidden, preloadField := GetGoalTag(field)
 
 		column := Column{
 			Name:         field.Name,
 			Type:         fieldType,
+			Secret:       secret,
 			Hidden:       hidden,
 			Primary:      primary,
 			Unique:       unique,
@@ -107,11 +109,14 @@ func Reflect(modelType reflect.Type) (hiddens, preloads, columns []Column) {
 			ValidateRule: validateRule,
 		}
 
-		if column.Preload {
-			preloads = append(preloads, column)
+		if column.Secret {
+			secrets = append(secrets, column)
 		}
 		if column.Hidden {
 			hiddens = append(hiddens, column)
+		}
+		if column.Preload {
+			preloads = append(preloads, column)
 		}
 		columns = append(columns, column)
 	}

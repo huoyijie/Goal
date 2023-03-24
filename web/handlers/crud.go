@@ -70,7 +70,7 @@ func CrudPerms(enforcer *casbin.Enforcer) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		mt, _ := c.Get("modelType")
 		modelType := mt.(reflect.Type)
-		_, _, cols := web.Reflect(modelType)
+		_, _, _, cols := web.Reflect(modelType)
 
 		session := web.GetSession(c)
 		model, _ := c.Get("model")
@@ -95,7 +95,7 @@ func CrudGet(db *gorm.DB) gin.HandlerFunc {
 		mt, _ := c.Get("modelType")
 		modelType := mt.(reflect.Type)
 
-		hiddens, preloads, cols := web.Reflect(modelType)
+		secrets, _, preloads, cols := web.Reflect(modelType)
 
 		records := reflect.New(reflect.SliceOf(modelType)).Interface()
 		tx := db.Model(model)
@@ -108,7 +108,7 @@ func CrudGet(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		recordsVal := reflect.ValueOf(records).Elem()
-		for _, c := range hiddens {
+		for _, c := range secrets {
 			for i := 0; i < recordsVal.Len(); i++ {
 				recordVal := recordsVal.Index(i)
 				field := recordVal.FieldByName(c.Name)
