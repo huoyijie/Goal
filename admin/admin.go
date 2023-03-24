@@ -7,8 +7,8 @@ import (
 )
 
 type OperationLog struct {
-	ID     uint `goal:"hidden" gorm:"primaryKey"`
-	UserID uint `goal:"hidden"`
+	ID     uint      `goal:"hidden" gorm:"primaryKey"`
+	UserID uint      `goal:"hidden"`
 	User   auth.User `goal:"preload=Username"`
 	Date   time.Time
 	IPAddr,
