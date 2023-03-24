@@ -12,8 +12,8 @@ type User struct {
 	Email    string `validate:"required,email" binding:"required,email" gorm:"unique"`
 	Password string `validate:"required,min=8" binding:"required,min=8" goal:"secret,hidden"`
 
-	IsSuperuser,
-	IsActive bool
+	IsSuperuser bool `goal:"readonly"`
+	IsActive    bool
 
 	Creator uint `goal:"autowired" gorm:"index"`
 }
@@ -23,9 +23,9 @@ func (u *User) Sub() string {
 }
 
 type Role struct {
-	ID   uint   `gorm:"primaryKey"`
-	Name string `binding:"required,alphanum,min=3,max=40" gorm:"unique"`
-	Creator uint `goal:"autowired" gorm:"index"`
+	ID      uint   `gorm:"primaryKey"`
+	Name    string `binding:"required,alphanum,min=3,max=40" gorm:"unique"`
+	Creator uint   `goal:"autowired" gorm:"index"`
 }
 
 func (r *Role) RoleID() string {
@@ -34,8 +34,8 @@ func (r *Role) RoleID() string {
 
 type Session struct {
 	ID         uint      `goal:"hidden" gorm:"primaryKey"`
-	Key        string    `binding:"required,alphanum,len=32" gorm:"unique"`
-	UserID     uint      `binding:"required,min=1" goal:"hidden"`
+	Key        string    `binding:"required,alphanum,len=32" goal:"uuid,readonly" gorm:"unique"`
+	UserID     uint      `binding:"required,min=1" goal:"hidden,postonly"`
 	User       User      `binding:"-" goal:"preload=Username"`
 	ExpireDate time.Time `binding:"required" gorm:"index"`
 }

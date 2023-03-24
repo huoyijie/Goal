@@ -70,8 +70,11 @@ func FieldKind(field reflect.StructField) string {
 	return fieldType
 }
 
-func GetGoalTag(field reflect.StructField) (autowired, secret, hidden bool, preloadField string) {
+func GetGoalTag(field reflect.StructField) (uuid, postonly, readonly, autowired, secret, hidden bool, preloadField string) {
 	goalTag := strings.Split(field.Tag.Get("goal"), ",")
+	uuid = util.Contains(goalTag, "uuid")
+	postonly = util.Contains(goalTag, "postonly")
+	readonly = util.Contains(goalTag, "readonly")
 	autowired = util.Contains(goalTag, "autowired")
 	secret = util.Contains(goalTag, "secret")
 	hidden = util.Contains(goalTag, "hidden")
@@ -96,11 +99,14 @@ func Reflect(modelType reflect.Type) (autowireds, secrets, hiddens, preloads, co
 		fieldType := FieldKind(field)
 		primary, unique := GetGormTag(field)
 		validateRule := GetBindingTag(field)
-		autowired, secret, hidden, preloadField := GetGoalTag(field)
+		uuid, postonly, readonly, autowired, secret, hidden, preloadField := GetGoalTag(field)
 
 		column := Column{
 			Name:         field.Name,
 			Type:         fieldType,
+			Uuid:         uuid,
+			Postonly:     postonly,
+			Readonly:     readonly,
 			Autowired:    autowired,
 			Secret:       secret,
 			Hidden:       hidden,
