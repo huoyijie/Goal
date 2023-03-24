@@ -5,6 +5,7 @@ import (
 
 	"github.com/casbin/casbin/v2"
 	"github.com/gin-gonic/gin"
+	"github.com/huoyijie/goal/admin"
 	"github.com/huoyijie/goal/auth"
 	"github.com/huoyijie/goal/web"
 	"gorm.io/gorm"
@@ -20,7 +21,14 @@ func GetPerms(models []any, enforcer *casbin.Enforcer) gin.HandlerFunc {
 
 		perms := []web.Perm{}
 		for _, m := range models {
+		inner:
 			for _, act := range web.Actions() {
+				switch m.(type) {
+				case *admin.OperationLog:
+					if act != "get" {
+						continue inner
+					}
+				}
 				perms = append(perms, web.NewPerm(web.Obj(m), act))
 			}
 		}

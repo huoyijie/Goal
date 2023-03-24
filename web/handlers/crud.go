@@ -17,7 +17,7 @@ const (
 	PASSWORD_PLACEHOLDER string = "password placeholder"
 )
 
-func crud(c *gin.Context, op byte, db *gorm.DB, enforcer *casbin.Enforcer) {
+func crud(c *gin.Context, action string, db *gorm.DB, enforcer *casbin.Enforcer) {
 	mt, _ := c.Get("modelType")
 	modelType := mt.(reflect.Type)
 
@@ -27,11 +27,11 @@ func crud(c *gin.Context, op byte, db *gorm.DB, enforcer *casbin.Enforcer) {
 	}
 
 	var tx *gorm.DB
-	switch op {
-	case 1, 2:
+	switch action {
+	case "post", "put":
 		switch r := record.(type) {
 		case *auth.User:
-			if op == 2 && r.Password == PASSWORD_PLACEHOLDER {
+			if action == "put" && r.Password == PASSWORD_PLACEHOLDER {
 				o := &auth.User{ID: r.ID}
 				if err := db.First(o).Error; err != nil {
 					c.AbortWithStatus(http.StatusInternalServerError)
@@ -43,7 +43,7 @@ func crud(c *gin.Context, op byte, db *gorm.DB, enforcer *casbin.Enforcer) {
 			}
 		}
 		tx = db.Save(record)
-	case 3:
+	case "delete":
 		switch r := record.(type) {
 		case *auth.Role:
 			enforcer.DeletePermissionsForUser(r.RoleID())
@@ -57,6 +57,8 @@ func crud(c *gin.Context, op byte, db *gorm.DB, enforcer *casbin.Enforcer) {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
+
+	web.RecordOpLog(db, c, record, action)
 
 	c.JSON(http.StatusOK, gin.H{
 		"code": 0,
@@ -145,19 +147,19 @@ func CrudGet(db *gorm.DB) gin.HandlerFunc {
 
 func CrudPost(db *gorm.DB, enforcer *casbin.Enforcer) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		crud(c, 1, db, enforcer)
+		crud(c, "post", db, enforcer)
 	}
 }
 
 func CrudPut(db *gorm.DB, enforcer *casbin.Enforcer) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		crud(c, 2, db, enforcer)
+		crud(c, "put", db, enforcer)
 	}
 }
 
 func CrudDelete(db *gorm.DB, enforcer *casbin.Enforcer) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		crud(c, 3, db, enforcer)
+		crud(c, "delete", db, enforcer)
 	}
 }
 
@@ -189,6 +191,8 @@ func CrudBatchDelete(db *gorm.DB, enforcer *casbin.Enforcer) gin.HandlerFunc {
 			c.AbortWithStatus(http.StatusInternalServerError)
 			return
 		}
+
+		web.RecordOpLogs(db, c, ids, "delete")
 
 		c.JSON(http.StatusOK, gin.H{
 			"code": 0,

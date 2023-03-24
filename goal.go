@@ -8,6 +8,7 @@ import (
 	"github.com/casbin/casbin/v2/model"
 	gormadapter "github.com/casbin/gorm-adapter/v3"
 	"github.com/gin-gonic/gin"
+	"github.com/huoyijie/goal/admin"
 	"github.com/huoyijie/goal/auth"
 	"github.com/huoyijie/goal/util"
 	"github.com/huoyijie/goal/web"
@@ -29,6 +30,7 @@ func NewGoal(db *gorm.DB, models ...any) Goal {
 		&auth.User{},
 		&auth.Role{},
 		&auth.Session{},
+		&admin.OperationLog{},
 	}
 	m = append(m, models...)
 

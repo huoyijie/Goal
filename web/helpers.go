@@ -10,6 +10,7 @@ import (
 
 	"github.com/casbin/casbin/v2"
 	"github.com/gin-gonic/gin"
+	"github.com/huoyijie/goal/admin"
 	"github.com/huoyijie/goal/auth"
 	"github.com/huoyijie/goal/util"
 	"gorm.io/gorm"
@@ -37,7 +38,7 @@ func Actions() []string {
 }
 
 func Allow(session *auth.Session, obj, act string, enforcer *casbin.Enforcer) bool {
-	if session.User.IsSuperuser {
+	if session.User.IsSuperuser && (obj != Obj(&admin.OperationLog{}) || act == "get") {
 		return true
 	}
 	if ok, err := enforcer.Enforce(session.Sub(), obj, act); err == nil && ok {
@@ -145,4 +146,40 @@ func ClearSessions(db *gorm.DB) {
 	for range ticker.C {
 		util.LogFatal(db.Delete(&auth.Session{}, "expire_date < ?", time.Now()).Error)
 	}
+}
+
+func RecordOpLog(db *gorm.DB, c *gin.Context, record any, action string) {
+	s, _ := c.Get("session")
+	session := s.(*auth.Session)
+	model, _ := c.Get("model")
+	pk := reflect.ValueOf(record).Elem().FieldByName("ID")
+	opLog := admin.OperationLog{
+		UserID:   session.UserID,
+		Date:     time.Now(),
+		IPAddr:   c.ClientIP(),
+		Group:    Group(model),
+		Item:     Item(model),
+		Action:   action,
+		ObjectID: uint(pk.Uint()),
+	}
+	db.Create(&opLog)
+}
+
+func RecordOpLogs(db *gorm.DB, c *gin.Context, ids []uint, action string) {
+	s, _ := c.Get("session")
+	session := s.(*auth.Session)
+	model, _ := c.Get("model")
+	var opLogs []admin.OperationLog
+	for _, objID := range ids {
+		opLogs = append(opLogs, admin.OperationLog{
+			UserID:   session.UserID,
+			Date:     time.Now(),
+			IPAddr:   c.ClientIP(),
+			Group:    Group(model),
+			Item:     Item(model),
+			Action:   action,
+			ObjectID: objID,
+		})
+	}
+	db.Create(&opLogs)
 }

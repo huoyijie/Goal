@@ -74,20 +74,12 @@ func ValidateModel(models []any) gin.HandlerFunc {
 
 func Authorize(enforcer *casbin.Enforcer) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		action := strings.ToLower(c.Request.Method)
-
-		session, found := c.Get("session")
-		if found {
-			// validate session
+		if session, found := c.Get("session"); found {
 			session := session.(*auth.Session)
-			// superuser
-			if session.User.IsSuperuser {
-				c.Next()
-				return
-			}
-			// has permission
 			model, _ := c.Get("model")
-			if ok, err := enforcer.Enforce(session.Sub(), web.Obj(model), action); err == nil && ok {
+			action := strings.ToLower(c.Request.Method)
+
+			if web.Allow(session, web.Obj(model), action, enforcer) {
 				c.Next()
 				return
 			}
