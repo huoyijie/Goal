@@ -35,7 +35,11 @@ func GetPerms(models []any, enforcer *casbin.Enforcer) gin.HandlerFunc {
 				}
 			}
 		} else {
-			myPermissions := enforcer.GetPermissionsForUser(session.Sub())
+			myPermissions, err := enforcer.GetImplicitPermissionsForUser(session.Sub())
+			if err != nil {
+				c.AbortWithStatus(http.StatusInternalServerError)
+				return
+			}
 			for _, p := range myPermissions {
 				perms = append(perms, web.NewPerm(p[1], p[2]))
 			}
