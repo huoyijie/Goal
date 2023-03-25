@@ -17,9 +17,16 @@ type SigninForm struct {
 	RememberMe bool
 }
 
+type Ref struct {
+	Pkg,
+	Name,
+	Field string
+}
+
 type Column struct {
 	Name,
 	Type string
+	Ref *Ref
 	Uuid,
 	Postonly,
 	Readonly,

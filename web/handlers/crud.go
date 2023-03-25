@@ -73,7 +73,7 @@ func crudGet(c *gin.Context, db *gorm.DB, mine bool) {
 	modelType := mt.(reflect.Type)
 	session := web.GetSession(c)
 
-	_, secrets, _, preloads, cols := web.Reflect(modelType)
+	_, secrets, _, preloads, _ := web.Reflect(modelType)
 
 	records := reflect.New(reflect.SliceOf(modelType)).Interface()
 	tx := db.Model(model)
@@ -118,10 +118,7 @@ func crudGet(c *gin.Context, db *gorm.DB, mine bool) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"code": 0,
-		"data": gin.H{
-			"cols":    cols,
-			"records": records,
-		},
+		"data": records,
 	})
 }
 

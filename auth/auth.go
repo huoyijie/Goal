@@ -35,7 +35,7 @@ func (r *Role) RoleID() string {
 type Session struct {
 	ID         uint      `goal:"hidden" gorm:"primaryKey"`
 	Key        string    `binding:"required,alphanum,len=32" goal:"uuid,readonly" gorm:"unique"`
-	UserID     uint      `binding:"required,min=1" goal:"hidden,postonly"`
+	UserID     uint      `binding:"required,min=1" goal:"ref=auth.User.Username,hidden,postonly"`
 	User       User      `binding:"-" goal:"preload=Username"`
 	ExpireDate time.Time `binding:"required" gorm:"index"`
 }
