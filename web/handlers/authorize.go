@@ -20,16 +20,24 @@ func GetPerms(models []any, enforcer *casbin.Enforcer) gin.HandlerFunc {
 		}
 
 		perms := []web.Perm{}
-		for _, m := range models {
-		inner:
-			for _, act := range web.Actions() {
-				switch m.(type) {
-				case *admin.OperationLog:
-					if act != "get" {
-						continue inner
+		session := web.GetSession(c)
+		if session.User.IsSuperuser {
+			for _, m := range models {
+			inner:
+				for _, act := range web.Actions() {
+					switch m.(type) {
+					case *admin.OperationLog:
+						if act != "get" {
+							continue inner
+						}
 					}
+					perms = append(perms, web.NewPerm(web.Obj(m), act))
 				}
-				perms = append(perms, web.NewPerm(web.Obj(m), act))
+			}
+		} else {
+			myPermissions := enforcer.GetPermissionsForUser(session.Sub())
+			for _, p := range myPermissions {
+				perms = append(perms, web.NewPerm(p[1], p[2]))
 			}
 		}
 
@@ -89,9 +97,29 @@ func GetRoles(db *gorm.DB, enforcer *casbin.Enforcer) gin.HandlerFunc {
 		}
 
 		var roles []auth.Role
-		if err := db.Find(&roles).Error; err != nil {
-			c.AbortWithStatus(http.StatusInternalServerError)
-			return
+
+		session := web.GetSession(c)
+		if session.User.IsSuperuser {
+			if err := db.Find(&roles).Error; err != nil {
+				c.AbortWithStatus(http.StatusInternalServerError)
+				return
+			}
+		} else {
+			myRoleIDList, err := enforcer.GetRolesForUser(session.Sub())
+			if err != nil {
+				c.AbortWithStatus(http.StatusInternalServerError)
+				return
+			}
+			var myRoles []uint
+			for _, p := range myRoleIDList {
+				myRoles = append(myRoles, web.ParseRoleID(p))
+			}
+			if len(myRoles) > 0 {
+				if err := db.Find(&roles, myRoles).Error; err != nil {
+					c.AbortWithStatus(http.StatusInternalServerError)
+					return
+				}
+			}
 		}
 
 		user := auth.User{ID: param.UserID}
