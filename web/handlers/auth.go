@@ -77,3 +77,13 @@ func Signout(db *gorm.DB) gin.HandlerFunc {
 		c.JSON(http.StatusOK, gin.H{"code": 0})
 	}
 }
+
+func Userinfo() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		session := web.GetSession(c)
+		c.JSON(http.StatusOK, gin.H{
+			"code": 0,
+			"data": session.User,
+		})
+	}
+}

@@ -83,6 +83,7 @@ func (gw *goal_web_t) Router() *gin.Engine {
 	signinRequiredGroup := adminGroup.Group("", middlewares.SigninRequired)
 	// `/admin/menus`
 	signinRequiredGroup.GET("menus", handlers.Menus(gw.getModels(), gw.enforcer))
+	signinRequiredGroup.GET("userinfo", handlers.Userinfo())
 
 	// `/admin/perms`
 	permsGroup := signinRequiredGroup.Group("perms", middlewares.CanChangePerms(gw.enforcer))
