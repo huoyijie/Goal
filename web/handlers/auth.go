@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/huoyijie/goal/auth"
+	"github.com/huoyijie/goal/util"
 	"github.com/huoyijie/goal/web"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -84,6 +85,31 @@ func Userinfo() gin.HandlerFunc {
 		c.JSON(http.StatusOK, gin.H{
 			"code": 0,
 			"data": session.User,
+		})
+	}
+}
+
+func ChangePassword(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		form := &web.ChangePasswordForm{}
+		if err := c.BindJSON(form); err != nil {
+			return
+		}
+		session := web.GetSession(c)
+		if bcrypt.CompareHashAndPassword([]byte(session.User.Password), []byte(form.Password)) != nil {
+			c.JSON(http.StatusOK, gin.H{
+				"code": 0,
+				"data": false,
+			})
+			return
+		}
+		if err := db.Model(&session.User).Updates(&auth.User{Password: util.BcryptHash(form.NewPassword)}).Error; err != nil {
+			c.AbortWithStatus(http.StatusInternalServerError)
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{
+			"code": 0,
+			"data": true,
 		})
 	}
 }

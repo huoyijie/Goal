@@ -17,6 +17,10 @@ type SigninForm struct {
 	RememberMe bool
 }
 
+type ChangePasswordForm struct {
+	Password, NewPassword string `binding:"required,min=8"`
+}
+
 type Ref struct {
 	Pkg,
 	Name,
