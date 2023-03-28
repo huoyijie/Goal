@@ -51,14 +51,18 @@ type Menu struct {
 
 type Perm struct {
 	Code,
-	Name string
+	Group,
+	Item,
+	Action string
 }
 
 func NewPerm(obj, action string) Perm {
 	arr := strings.Split(obj, ".")
 	return Perm{
-		Code: fmt.Sprintf("%s:%s", obj, action),
-		Name: fmt.Sprintf("%s %s %s", arr[0], arr[1], action),
+		Code:   fmt.Sprintf("%s:%s", obj, action),
+		Group:  arr[0],
+		Item:   arr[1],
+		Action: action,
 	}
 }
 
