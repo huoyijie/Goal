@@ -103,8 +103,8 @@ func (gw *goal_web_t) Router() *gin.Engine {
 	// `/admin/crud/:group/:item`
 	modelGroup := crudGroup.Group(":group/:item")
 
-	// `/admin/crud/:group/:item/perms`
-	modelGroup.GET("perms", handlers.CrudPerms(gw.enforcer))
+	// `/admin/crud/:group/:item/columns`
+	modelGroup.GET("columns", handlers.CrudColumns(gw.enforcer))
 	modelGroup.GET("mine", handlers.CrudGetMine(gw.db))
 
 	AuthorizeGroup := modelGroup.Group("", middlewares.Authorize(gw.enforcer))

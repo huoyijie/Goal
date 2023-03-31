@@ -102,11 +102,11 @@ func crudGet(c *gin.Context, db *gorm.DB, mine bool) {
 	})
 }
 
-func CrudPerms(enforcer *casbin.Enforcer) gin.HandlerFunc {
+func CrudColumns(enforcer *casbin.Enforcer) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		mt, _ := c.Get("modelType")
 		modelType := mt.(reflect.Type)
-		_, _, cols := web.Reflect(modelType)
+		_, _, columns := web.Reflect(modelType)
 
 		session := web.GetSession(c)
 		model, _ := c.Get("model")
@@ -118,8 +118,8 @@ func CrudPerms(enforcer *casbin.Enforcer) gin.HandlerFunc {
 		c.JSON(http.StatusOK, gin.H{
 			"code": 0,
 			"data": gin.H{
-				"cols":  cols,
-				"perms": perms,
+				"columns": columns,
+				"perms":   perms,
 			},
 		})
 	}
