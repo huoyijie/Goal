@@ -13,10 +13,6 @@ import (
 	"gorm.io/gorm"
 )
 
-const (
-	PASSWORD_PLACEHOLDER string = "password placeholder"
-)
-
 func crud(c *gin.Context, action string, db *gorm.DB, enforcer *casbin.Enforcer) {
 	mt, _ := c.Get("modelType")
 	modelType := mt.(reflect.Type)
@@ -32,7 +28,7 @@ func crud(c *gin.Context, action string, db *gorm.DB, enforcer *casbin.Enforcer)
 		web.AutowiredCreator(c, action, record)
 		switch r := record.(type) {
 		case *auth.User:
-			if action == "put" && r.Password == PASSWORD_PLACEHOLDER {
+			if action == "put" && r.Password == web.PASSWORD_PLACEHOLDER {
 				o := &auth.User{ID: r.ID}
 				if err := db.First(o).Error; err != nil {
 					c.AbortWithStatus(http.StatusInternalServerError)
@@ -73,7 +69,7 @@ func crudGet(c *gin.Context, db *gorm.DB, mine bool) {
 	modelType := mt.(reflect.Type)
 	session := web.GetSession(c)
 
-	_, secrets, _, preloads, _ := web.Reflect(modelType)
+	secrets, preloads, _ := web.Reflect(modelType)
 
 	records := reflect.New(reflect.SliceOf(modelType)).Interface()
 	tx := db.Model(model)
@@ -89,30 +85,14 @@ func crudGet(c *gin.Context, db *gorm.DB, mine bool) {
 	}
 
 	recordsVal := reflect.ValueOf(records).Elem()
-	for _, c := range secrets {
-		for i := 0; i < recordsVal.Len(); i++ {
-			recordVal := recordsVal.Index(i)
-			field := recordVal.FieldByName(c.Name)
-			if c.Type == "string" && c.Name == "Password" {
-				field.Set(reflect.ValueOf(PASSWORD_PLACEHOLDER))
-			} else {
-				field.SetZero()
-			}
-		}
-	}
+	web.SecureRecords(secrets, recordsVal)
 
 	for _, c := range preloads {
 		for i := 0; i < recordsVal.Len(); i++ {
 			recordVal := recordsVal.Index(i)
 			preloadVal := recordVal.FieldByName(c.Name)
-			// todo hardcode by `ID`
-			pk := preloadVal.FieldByName("ID")
-			pkVal := pk.Interface()
-			preloadField := preloadVal.FieldByName(c.PreloadField)
-			dstVal := preloadField.Interface()
-			preloadVal.SetZero()
-			pk.Set(reflect.ValueOf(pkVal))
-			preloadField.Set(reflect.ValueOf(dstVal))
+			secrets, _, _ := web.Reflect(reflect.TypeOf(preloadVal.Interface()))
+			web.SecureRecord(secrets, preloadVal)
 		}
 	}
 
@@ -126,7 +106,7 @@ func CrudPerms(enforcer *casbin.Enforcer) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		mt, _ := c.Get("modelType")
 		modelType := mt.(reflect.Type)
-		_, _, _, _, cols := web.Reflect(modelType)
+		_, _, cols := web.Reflect(modelType)
 
 		session := web.GetSession(c)
 		model, _ := c.Get("model")

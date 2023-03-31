@@ -6,16 +6,16 @@ import (
 )
 
 type User struct {
-	ID uint `gorm:"primaryKey"`
+	ID uint `goal:"<number>primary" gorm:"primaryKey"`
 
-	Username string `validate:"required,alphanum,min=3,max=40" binding:"required,alphanum,min=3,max=40" gorm:"unique"`
-	Email    string `validate:"required,email" binding:"required,email" gorm:"unique"`
-	Password string `validate:"required,min=8" binding:"required,min=8" goal:"secret,hidden"`
+	Username string `validate:"required,alphanum,min=3,max=40" binding:"required,alphanum,min=3,max=40" goal:"<text>unique" gorm:"unique"`
+	Email    string `validate:"required,email" binding:"required,email" goal:"<text>unique" gorm:"unique"`
+	Password string `validate:"required,min=8" binding:"required,min=8" goal:"<password>secret,hidden"`
 
-	IsSuperuser bool `goal:"readonly"`
-	IsActive    bool
+	IsSuperuser bool `goal:"<switch>readonly"`
+	IsActive    bool `goal:"<switch>"`
 
-	Creator uint `goal:"autowired" gorm:"index"`
+	Creator uint `goal:"<number>autowired" gorm:"index"`
 }
 
 func (u *User) Sub() string {
@@ -23,9 +23,9 @@ func (u *User) Sub() string {
 }
 
 type Role struct {
-	ID      uint   `gorm:"primaryKey"`
-	Name    string `binding:"required,alphanum,min=3,max=40" gorm:"unique"`
-	Creator uint   `goal:"autowired" gorm:"index"`
+	ID      uint   `goal:"<number>primary" gorm:"primaryKey"`
+	Name    string `binding:"required,alphanum,min=3,max=40" goal:"<text>unique" gorm:"unique"`
+	Creator uint   `goal:"<number>autowired" gorm:"index"`
 }
 
 func (r *Role) RoleID() string {
@@ -33,11 +33,11 @@ func (r *Role) RoleID() string {
 }
 
 type Session struct {
-	ID         uint      `goal:"hidden" gorm:"primaryKey"`
-	Key        string    `binding:"required,alphanum,len=32" goal:"uuid,readonly" gorm:"unique"`
-	UserID     uint      `binding:"required,min=1" goal:"ref=auth.User.Username,hidden,postonly"`
-	User       User      `binding:"-" goal:"preload=Username"`
-	ExpireDate time.Time `binding:"required" gorm:"index"`
+	ID         uint      `goal:"<number>primary,hidden" gorm:"primaryKey"`
+	Key        string    `binding:"required,alphanum,len=32" goal:"<uuid>readonly,unique" gorm:"unique"`
+	UserID     uint      `goal:"<number>autowired"`
+	User       User      `binding:"required" goal:"<dropdown>postonly,belongTo=auth.User.Username,filter"`
+	ExpireDate time.Time `binding:"required" goal:"<calendar>showTime,showIcon" gorm:"index"`
 }
 
 func (s *Session) Sub() string {

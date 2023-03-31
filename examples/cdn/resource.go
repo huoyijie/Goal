@@ -1,6 +1,6 @@
 package cdn
 
 type Resource struct {
-	ID   uint   `gorm:"primaryKey"`
-	Path string `goal:"uploadTo=uploads" gorm:"unique"`
+	ID   uint   `goal:"<number>primary,hidden" gorm:"primaryKey"`
+	Path string `goal:"<text>uploadTo=uploads,unique" gorm:"unique"`
 }

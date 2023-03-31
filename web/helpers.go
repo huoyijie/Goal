@@ -13,7 +13,12 @@ import (
 	"github.com/huoyijie/goal/admin"
 	"github.com/huoyijie/goal/auth"
 	"github.com/huoyijie/goal/util"
+	"github.com/huoyijie/goal/web/tag"
 	"gorm.io/gorm"
+)
+
+const (
+	PASSWORD_PLACEHOLDER string = "password placeholder"
 )
 
 func Group(model any) string {
@@ -57,87 +62,52 @@ func ParseRoleID(roleID string) uint {
 	return uint(id)
 }
 
-func FieldKind(field reflect.StructField) string {
-	fieldType := field.Type.Name()
-	switch field.Type.Kind() {
-	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		fieldType = "uint"
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		fieldType = "int"
-	case reflect.Float32, reflect.Float64:
-		fieldType = "float"
+func GetComponent(field reflect.StructField) tag.Component {
+	token := field.Tag.Get("goal")
+	if token != "" {
+		for _, c := range tag.COMPONETS {
+			if c.Is(token) {
+				com := reflect.New(reflect.TypeOf(c).Elem())
+				m := com.MethodByName("Unmarshal")
+				m.Call([]reflect.Value{reflect.ValueOf(token)})
+				return com.Interface().(tag.Component)
+			}
+		}
 	}
-	return fieldType
-}
-
-func GetGoalTag(field reflect.StructField) (uuid, postonly, readonly, autowired, secret, hidden bool, ref, preloadField string) {
-	goalTag := strings.Split(field.Tag.Get("goal"), ",")
-	uuid = util.Contains(goalTag, "uuid")
-	ref = util.GetWithPrefix(goalTag, "ref=")
-	postonly = util.Contains(goalTag, "postonly")
-	readonly = util.Contains(goalTag, "readonly")
-	autowired = util.Contains(goalTag, "autowired")
-	secret = util.Contains(goalTag, "secret")
-	hidden = util.Contains(goalTag, "hidden")
-	preloadField = util.GetWithPrefix(goalTag, "preload=")
-	return
-}
-
-func GetGormTag(field reflect.StructField) (primary, unique bool) {
-	gormTag := strings.Split(field.Tag.Get("gorm"), ",")
-	primary = util.Contains(gormTag, "primaryKey")
-	unique = util.Contains(gormTag, "unique")
-	return
+	return nil
 }
 
 func GetBindingTag(field reflect.StructField) string {
 	return field.Tag.Get("binding")
 }
 
-func NewRef(ref string) *Ref {
-	if len(ref) == 0 {
-		return nil
-	}
-	refs := strings.Split(ref, ".")
-	return &Ref{refs[0], refs[1], refs[2]}
-}
-
-func Reflect(modelType reflect.Type) (autowireds, secrets, hiddens, preloads, columns []Column) {
+func Reflect(modelType reflect.Type) (secrets, preloads, columns []Column) {
 	for i := 0; i < modelType.NumField(); i++ {
 		field := modelType.Field(i)
-		fieldType := FieldKind(field)
-		primary, unique := GetGormTag(field)
 		validateRule := GetBindingTag(field)
-		uuid, postonly, readonly, autowired, secret, hidden, ref, preloadField := GetGoalTag(field)
 
-		column := Column{
-			Name:         field.Name,
-			Type:         fieldType,
-			Ref:          NewRef(ref),
-			Uuid:         uuid,
-			Postonly:     postonly,
-			Readonly:     readonly,
-			Autowired:    autowired,
-			Secret:       secret,
-			Hidden:       hidden,
-			Primary:      primary,
-			Unique:       unique,
-			Preload:      preloadField != "",
-			PreloadField: preloadField,
-			ValidateRule: validateRule,
-		}
-
-		if column.Autowired {
-			autowireds = append(autowireds, column)
+		component := GetComponent(field)
+		if component == nil {
 			continue
 		}
-		if column.Secret {
+
+		column := Column{
+			field.Name,
+			Component{
+				component.Head(),
+				component,
+			},
+			validateRule,
+		}
+
+		if component.(tag.IBase).Get().Autowired {
+			continue
+		}
+		if component.(tag.IBase).Get().Secret {
 			secrets = append(secrets, column)
 		}
-		if column.Hidden {
-			hiddens = append(hiddens, column)
-		}
-		if column.Preload {
+
+		if component.(tag.IBase).Get().BelongTo != nil {
 			preloads = append(preloads, column)
 		}
 		columns = append(columns, column)
@@ -210,10 +180,27 @@ func RecordOpLogs(db *gorm.DB, c *gin.Context, ids []uint, action string) {
 
 func AutowiredCreator(c *gin.Context, action string, record any) {
 	if action == "post" {
-		session := GetSession(c)
 		creatorField := reflect.ValueOf(record).Elem().FieldByName("Creator")
 		if creatorField.IsValid() {
+			session := GetSession(c)
 			creatorField.SetUint(uint64(session.UserID))
+		}
+	}
+}
+
+func SecureRecords(secrets []Column, recordsVal reflect.Value) {
+	for i := 0; i < recordsVal.Len(); i++ {
+		SecureRecord(secrets, recordsVal.Index(i))
+	}
+}
+
+func SecureRecord(secrets []Column, recordVal reflect.Value) {
+	for _, c := range secrets {
+		field := recordVal.FieldByName(c.Name)
+		if c.Component.Tag.Is("<password>") {
+			field.Set(reflect.ValueOf(PASSWORD_PLACEHOLDER))
+		} else {
+			field.SetZero()
 		}
 	}
 }

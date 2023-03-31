@@ -3,6 +3,8 @@ package web
 import (
 	"fmt"
 	"strings"
+
+	"github.com/huoyijie/goal/web/tag"
 )
 
 type Code int
@@ -21,26 +23,14 @@ type ChangePasswordForm struct {
 	Password, NewPassword string `binding:"required,min=8"`
 }
 
-type Ref struct {
-	Pkg,
-	Name,
-	Field string
+type Component struct {
+	Name string
+	Tag  tag.Component
 }
 
 type Column struct {
-	Name,
-	Type string
-	Ref *Ref
-	Uuid,
-	Postonly,
-	Readonly,
-	Autowired,
-	Secret,
-	Hidden,
-	Primary,
-	Unique,
-	Preload bool
-	PreloadField,
+	Name         string
+	Component    Component
 	ValidateRule string
 }
 

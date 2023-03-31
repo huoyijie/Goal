@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"unicode"
 
 	"github.com/glebarez/sqlite"
 	"golang.org/x/crypto/bcrypt"
@@ -59,4 +60,10 @@ func BcryptHash(rawPassword string) string {
 	bcryptHash, err := bcrypt.GenerateFromPassword([]byte(rawPassword), 14)
 	LogFatal(err)
 	return string(bcryptHash)
+}
+
+func ToLowerFirstLetter(str string) string {
+	a := []rune(str)
+	a[0] = unicode.ToLower(a[0])
+	return string(a)
 }
