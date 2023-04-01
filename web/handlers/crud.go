@@ -57,10 +57,7 @@ func crud(c *gin.Context, action string, db *gorm.DB, enforcer *casbin.Enforcer)
 
 	web.RecordOpLog(db, c, record, action)
 
-	c.JSON(http.StatusOK, gin.H{
-		"code": 0,
-		"data": record,
-	})
+	c.JSON(http.StatusOK, web.Result{Data: record})
 }
 
 func crudGet(c *gin.Context, db *gorm.DB, mine bool) {
@@ -96,10 +93,7 @@ func crudGet(c *gin.Context, db *gorm.DB, mine bool) {
 		}
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"code": 0,
-		"data": records,
-	})
+	c.JSON(http.StatusOK, web.Result{Data: records})
 }
 
 func CrudColumns(enforcer *casbin.Enforcer) gin.HandlerFunc {
@@ -110,18 +104,20 @@ func CrudColumns(enforcer *casbin.Enforcer) gin.HandlerFunc {
 
 		session := web.GetSession(c)
 		model, _ := c.Get("model")
-		perms := gin.H{}
+
+		perms := &web.Perms{}
+		permsVal := reflect.ValueOf(perms).Elem()
 		for _, act := range web.Actions() {
-			perms[act] = web.Allow(session, web.Obj(model), act, enforcer)
+			if web.Allow(session, web.Obj(model), act, enforcer) {
+				f := permsVal.FieldByName(util.ToUpperFirstLetter(act))
+				f.SetBool(true)
+			}
 		}
 
-		c.JSON(http.StatusOK, gin.H{
-			"code": 0,
-			"data": gin.H{
-				"columns": columns,
-				"perms":   perms,
-			},
-		})
+		c.JSON(http.StatusOK, web.Result{Data: web.Columns{
+			Columns: columns,
+			Perms:   perms,
+		}})
 	}
 }
 
@@ -186,9 +182,7 @@ func CrudBatchDelete(db *gorm.DB, enforcer *casbin.Enforcer) gin.HandlerFunc {
 
 		web.RecordOpLogs(db, c, ids, "delete")
 
-		c.JSON(http.StatusOK, gin.H{
-			"code": 0,
-		})
+		c.JSON(http.StatusOK, web.Result{})
 	}
 }
 
@@ -204,12 +198,12 @@ func CrudExist(db *gorm.DB) gin.HandlerFunc {
 		// todo refactor hardcode by `ID`
 		err := db.Select("ID").Where(record).First(dbRecord).Error
 		if err == nil {
-			c.JSON(http.StatusOK, gin.H{"code": 0, "data": dbRecord})
+			c.JSON(http.StatusOK, web.Result{Data: dbRecord})
 			return
 		}
 
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			c.JSON(http.StatusOK, gin.H{"code": 0, "data": nil})
+			c.JSON(http.StatusOK, web.Result{})
 			return
 		}
 		c.AbortWithStatus(http.StatusInternalServerError)

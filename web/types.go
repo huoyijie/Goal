@@ -7,10 +7,8 @@ import (
 	"github.com/huoyijie/goal/web/tag"
 )
 
-type Code int
-
 const (
-	ErrInvalidUsernameOrPassword Code = -(iota + 10000)
+	ErrInvalidUsernameOrPassword int = -(iota + 10000)
 )
 
 type SigninForm struct {
@@ -23,15 +21,32 @@ type ChangePasswordForm struct {
 	Password, NewPassword string `binding:"required,min=8"`
 }
 
+type Result struct {
+	Code int `json:"code"`
+	Data any `json:"data"`
+}
+
 type Component struct {
 	Name string
 	Tag  tag.Component
+}
+
+type Columns struct {
+	Columns []Column `json:"columns"`
+	Perms   *Perms   `json:"perms"`
 }
 
 type Column struct {
 	Name         string
 	Component    Component
 	ValidateRule string
+}
+
+type Perms struct {
+	Post   bool `json:"post"`
+	Delete bool `json:"delete"`
+	Put    bool `json:"put"`
+	Get    bool `json:"get"`
 }
 
 type Menu struct {

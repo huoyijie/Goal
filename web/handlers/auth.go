@@ -22,9 +22,7 @@ func Signin(db *gorm.DB) gin.HandlerFunc {
 		}
 		user := auth.User{Username: form.Username, IsActive: true}
 		if err := db.Where(&user).First(&user).Error; err != nil || bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(form.Password)) != nil {
-			c.JSON(http.StatusOK, gin.H{
-				"code": web.ErrInvalidUsernameOrPassword,
-			})
+			c.JSON(http.StatusOK, web.Result{Code: web.ErrInvalidUsernameOrPassword})
 			return
 		}
 
@@ -57,10 +55,7 @@ func Signin(db *gorm.DB) gin.HandlerFunc {
 		// save new sessionid to cookie
 		web.SetCookieSessionid(c, sessionid, form.RememberMe)
 
-		c.JSON(http.StatusOK, gin.H{
-			"code": 0,
-			"data": user.Username,
-		})
+		c.JSON(http.StatusOK, web.Result{Data: user.Username})
 	}
 }
 
@@ -75,17 +70,14 @@ func Signout(db *gorm.DB) gin.HandlerFunc {
 			}
 		}
 		web.SetCookieSessionid(c, "", false)
-		c.JSON(http.StatusOK, gin.H{"code": 0})
+		c.JSON(http.StatusOK, web.Result{})
 	}
 }
 
 func Userinfo() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		session := web.GetSession(c)
-		c.JSON(http.StatusOK, gin.H{
-			"code": 0,
-			"data": session.User,
-		})
+		c.JSON(http.StatusOK, web.Result{Data: session.User})
 	}
 }
 
@@ -97,19 +89,13 @@ func ChangePassword(db *gorm.DB) gin.HandlerFunc {
 		}
 		session := web.GetSession(c)
 		if bcrypt.CompareHashAndPassword([]byte(session.User.Password), []byte(form.Password)) != nil {
-			c.JSON(http.StatusOK, gin.H{
-				"code": 0,
-				"data": false,
-			})
+			c.JSON(http.StatusOK, web.Result{Data: false})
 			return
 		}
 		if err := db.Model(&session.User).Updates(&auth.User{Password: util.BcryptHash(form.NewPassword)}).Error; err != nil {
 			c.AbortWithStatus(http.StatusInternalServerError)
 			return
 		}
-		c.JSON(http.StatusOK, gin.H{
-			"code": 0,
-			"data": true,
-		})
+		c.JSON(http.StatusOK, web.Result{Data: true})
 	}
 }

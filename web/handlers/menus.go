@@ -28,9 +28,6 @@ func Menus(models []any, enforcer *casbin.Enforcer) gin.HandlerFunc {
 				}
 			}
 		}
-		c.JSON(http.StatusOK, gin.H{
-			"code": 0,
-			"data": menus,
-		})
+		c.JSON(http.StatusOK, web.Result{Data: menus})
 	}
 }

@@ -62,10 +62,7 @@ func GetPerms(models []any, enforcer *casbin.Enforcer) gin.HandlerFunc {
 			}
 			availablePerms = append(availablePerms, p1)
 		}
-		c.JSON(http.StatusOK, gin.H{
-			"code": 0,
-			"data": [][]web.Perm{availablePerms, rolePerms},
-		})
+		c.JSON(http.StatusOK, web.Result{Data: [][]web.Perm{availablePerms, rolePerms}})
 	}
 }
 
@@ -88,7 +85,7 @@ func ChangePerms(db *gorm.DB, enforcer *casbin.Enforcer) gin.HandlerFunc {
 		enforcer.DeletePermissionsForUser(role.RoleID())
 		enforcer.AddPermissionsForUser(role.RoleID(), permissions...)
 		web.RecordOpLog(db, c, &role, "put")
-		c.JSON(http.StatusOK, gin.H{"code": 0})
+		c.JSON(http.StatusOK, web.Result{})
 	}
 }
 
@@ -154,10 +151,7 @@ func GetRoles(db *gorm.DB, enforcer *casbin.Enforcer) gin.HandlerFunc {
 			}
 			availableRoles = append(availableRoles, p1)
 		}
-		c.JSON(http.StatusOK, gin.H{
-			"code": 0,
-			"data": [][]auth.Role{availableRoles, selectedRoles},
-		})
+		c.JSON(http.StatusOK, web.Result{Data: [][]auth.Role{availableRoles, selectedRoles}})
 	}
 }
 
@@ -180,6 +174,6 @@ func ChangeRoles(db *gorm.DB, enforcer *casbin.Enforcer) gin.HandlerFunc {
 		enforcer.DeleteRolesForUser(user.Sub())
 		enforcer.AddRolesForUser(user.Sub(), roles)
 		web.RecordOpLog(db, c, &user, "put")
-		c.JSON(http.StatusOK, gin.H{"code": 0})
+		c.JSON(http.StatusOK, web.Result{})
 	}
 }
