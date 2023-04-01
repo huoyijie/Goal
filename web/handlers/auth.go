@@ -89,13 +89,13 @@ func ChangePassword(db *gorm.DB) gin.HandlerFunc {
 		}
 		session := web.GetSession(c)
 		if bcrypt.CompareHashAndPassword([]byte(session.User.Password), []byte(form.Password)) != nil {
-			c.JSON(http.StatusOK, web.Result{Data: false})
+			c.JSON(http.StatusOK, web.Result{Code: web.ErrInvalidPassword})
 			return
 		}
 		if err := db.Model(&session.User).Updates(&auth.User{Password: util.BcryptHash(form.NewPassword)}).Error; err != nil {
 			c.AbortWithStatus(http.StatusInternalServerError)
 			return
 		}
-		c.JSON(http.StatusOK, web.Result{Data: true})
+		c.JSON(http.StatusOK, web.Result{})
 	}
 }

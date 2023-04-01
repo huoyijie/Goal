@@ -9,6 +9,7 @@ import (
 
 const (
 	ErrInvalidUsernameOrPassword int = -(iota + 10000)
+	ErrInvalidPassword
 )
 
 type SigninForm struct {
