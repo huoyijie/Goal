@@ -266,6 +266,72 @@ func (f *Float) Unmarshal(token string) {
 	}
 }
 
+type Sortable bool
+
+// Marshal implements Tag
+func (s *Sortable) Marshal() (token string) {
+	if *s {
+		token = Key(s)
+	}
+	return
+}
+
+// Match implements Tag
+func (s *Sortable) Match(token string) bool {
+	return strings.Contains(token, Key(s))
+}
+
+// Unmarshal implements Tag
+func (s *Sortable) Unmarshal(token string) {
+	if s.Match(token) {
+		*s = true
+	}
+}
+
+type Asc bool
+
+// Marshal implements Tag
+func (a *Asc) Marshal() (token string) {
+	if *a {
+		token = Key(a)
+	}
+	return
+}
+
+// Match implements Tag
+func (a *Asc) Match(token string) bool {
+	return strings.Contains(token, Key(a))
+}
+
+// Unmarshal implements Tag
+func (a *Asc) Unmarshal(token string) {
+	if a.Match(token) {
+		*a = true
+	}
+}
+
+type Desc bool
+
+// Marshal implements Tag
+func (d *Desc) Marshal() (token string) {
+	if *d {
+		token = Key(d)
+	}
+	return
+}
+
+// Match implements Tag
+func (d *Desc) Match(token string) bool {
+	return strings.Contains(token, Key(d))
+}
+
+// Unmarshal implements Tag
+func (d *Desc) Unmarshal(token string) {
+	if d.Match(token) {
+		*d = true
+	}
+}
+
 var (
 	_ Tag = (*Autowired)(nil)
 	_ Tag = (*Secret)(nil)
@@ -279,4 +345,7 @@ var (
 	_ Tag = (*Filter)(nil)
 	_ Tag = (*ShowButtons)(nil)
 	_ Tag = (*Float)(nil)
+	_ Tag = (*Sortable)(nil)
+	_ Tag = (*Asc)(nil)
+	_ Tag = (*Desc)(nil)
 )
