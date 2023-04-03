@@ -115,6 +115,7 @@ func (gw *goal_web_t) Router() *gin.Engine {
 	AuthorizeGroup.DELETE("", handlers.CrudDelete(gw.db, gw.enforcer))
 	AuthorizeGroup.DELETE("batch", handlers.CrudBatchDelete(gw.db, gw.enforcer))
 	AuthorizeGroup.POST("exist", handlers.CrudExist(gw.db))
+	AuthorizeGroup.POST("upload/:field", handlers.Upload(gw.db))
 
 	go web.ClearSessions(gw.db)
 	return router

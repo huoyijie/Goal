@@ -16,6 +16,7 @@ var COMPONETS = []Component{
 	&Password{},
 	&Uuid{},
 	&Switch{},
+	&File{},
 }
 
 // define a Component

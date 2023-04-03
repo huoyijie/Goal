@@ -2,14 +2,19 @@ package handlers
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
+	"path/filepath"
 	"reflect"
+	"strings"
+	"time"
 
 	"github.com/casbin/casbin/v2"
 	"github.com/gin-gonic/gin"
 	"github.com/huoyijie/goal/auth"
 	"github.com/huoyijie/goal/util"
 	"github.com/huoyijie/goal/web"
+	"github.com/huoyijie/goal/web/tag"
 	"gorm.io/gorm"
 )
 
@@ -207,5 +212,31 @@ func CrudExist(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 		c.AbortWithStatus(http.StatusInternalServerError)
+	}
+}
+
+func Upload(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		mt, _ := c.Get("modelType")
+		modelType := mt.(reflect.Type)
+
+		field, _ := c.Params.Get("field")
+		f, _ := modelType.FieldByName(field)
+
+		t := web.GetComponent(f)
+		uploadPath := t.(*tag.File).UploadTo.Path
+
+		file, _ := c.FormFile("file")
+
+		ext := filepath.Ext(file.Filename)
+		name, _ := strings.CutSuffix(file.Filename, ext)
+		fname := fmt.Sprintf("%s.%s%s", name, util.RandString(8), ext)
+
+		now := time.Now()
+		filePath := filepath.Join(uploadPath, fmt.Sprintf("%d", now.Year()), fmt.Sprintf("%02d", now.Month()), fname)
+
+		c.SaveUploadedFile(file, filePath)
+
+		c.JSON(http.StatusOK, web.Result{Data: filePath})
 	}
 }

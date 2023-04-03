@@ -10,5 +10,6 @@ import (
 
 func main() {
 	router := goal.NewGoal(util.OpenSqliteDB(), &cdn.Resource{}).Router()
+	router.Static("uploads", "uploads")
 	router.Run(fmt.Sprintf("%s:%d", "127.0.0.1", 8100))
 }
