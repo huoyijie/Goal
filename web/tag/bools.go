@@ -332,6 +332,28 @@ func (d *Desc) Unmarshal(token string) {
 	}
 }
 
+type GlobalSearch bool
+
+// Marshal implements Tag
+func (gs *GlobalSearch) Marshal() (token string) {
+	if *gs {
+		token = Key(gs)
+	}
+	return
+}
+
+// Match implements Tag
+func (gs *GlobalSearch) Match(token string) bool {
+	return strings.Contains(token, Key(gs))
+}
+
+// Unmarshal implements Tag
+func (gs *GlobalSearch) Unmarshal(token string) {
+	if gs.Match(token) {
+		*gs = true
+	}
+}
+
 var (
 	_ Tag = (*Autowired)(nil)
 	_ Tag = (*Secret)(nil)
@@ -348,4 +370,5 @@ var (
 	_ Tag = (*Sortable)(nil)
 	_ Tag = (*Asc)(nil)
 	_ Tag = (*Desc)(nil)
+	_ Tag = (*GlobalSearch)(nil)
 )

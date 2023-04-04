@@ -141,7 +141,7 @@ func ClearSessions(db *gorm.DB) {
 	ticker := time.NewTicker(60 * time.Second)
 	defer ticker.Stop()
 	for range ticker.C {
-		util.LogFatal(db.Delete(&auth.Session{}, "expire_date < ?", time.Now()).Error)
+		util.Log(db.Delete(&auth.Session{}, "expire_date < ?", time.Now()).Error)
 	}
 }
 

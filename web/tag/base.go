@@ -7,17 +7,18 @@ type IBase interface {
 
 // base
 type Base struct {
-	Autowired `json:",omitempty"`
-	Secret    `json:",omitempty"`
-	Hidden    `json:",omitempty"`
-	Postonly  `json:",omitempty"`
-	Readonly  `json:",omitempty"`
-	Primary   `json:",omitempty"`
-	Unique    `json:",omitempty"`
-	Sortable  `json:",omitempty"`
-	Asc       `json:",omitempty"`
-	Desc      `json:",omitempty"`
-	BelongTo  *BelongTo `json:",omitempty"`
+	Autowired    `json:",omitempty"`
+	Secret       `json:",omitempty"`
+	Hidden       `json:",omitempty"`
+	Postonly     `json:",omitempty"`
+	Readonly     `json:",omitempty"`
+	Primary      `json:",omitempty"`
+	Unique       `json:",omitempty"`
+	Sortable     `json:",omitempty"`
+	Asc          `json:",omitempty"`
+	Desc         `json:",omitempty"`
+	GlobalSearch `json:",omitempty"`
+	BelongTo     *BelongTo `json:",omitempty"`
 }
 
 // Get implements IBase

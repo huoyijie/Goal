@@ -48,6 +48,12 @@ func LogFatal(err error) {
 	}
 }
 
+func Log(err error) {
+	if err != nil {
+		log.Println(err)
+	}
+}
+
 func Contains(elems []string, v string) bool {
 	for _, s := range elems {
 		if v == s {

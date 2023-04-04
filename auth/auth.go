@@ -8,8 +8,8 @@ import (
 type User struct {
 	ID uint `goal:"<number>primary,sortable,asc" gorm:"primaryKey"`
 
-	Username string `validate:"required,alphanum,min=3,max=40" binding:"required,alphanum,min=3,max=40" goal:"<text>unique,sortable" gorm:"unique"`
-	Email    string `validate:"required,email" binding:"required,email" goal:"<text>unique,sortable" gorm:"unique"`
+	Username string `validate:"required,alphanum,min=3,max=40" binding:"required,alphanum,min=3,max=40" goal:"<text>unique,sortable,globalSearch" gorm:"unique"`
+	Email    string `validate:"required,email" binding:"required,email" goal:"<text>unique,sortable,globalSearch" gorm:"unique"`
 	Password string `validate:"required,min=8" binding:"required,min=8" goal:"<password>secret,hidden"`
 
 	IsSuperuser bool `goal:"<switch>readonly"`
@@ -24,7 +24,7 @@ func (u *User) Sub() string {
 
 type Role struct {
 	ID      uint   `goal:"<number>primary,sortable,asc" gorm:"primaryKey"`
-	Name    string `binding:"required,alphanum,min=3,max=40" goal:"<text>unique,sortable" gorm:"unique"`
+	Name    string `binding:"required,alphanum,min=3,max=40" goal:"<text>unique,sortable,globalSearch" gorm:"unique"`
 	Creator uint   `goal:"<number>autowired" gorm:"index"`
 }
 
@@ -34,9 +34,9 @@ func (r *Role) RoleID() string {
 
 type Session struct {
 	ID         uint      `goal:"<number>primary,hidden" gorm:"primaryKey"`
-	Key        string    `binding:"required,alphanum,len=32" goal:"<uuid>readonly,unique" gorm:"unique"`
+	Key        string    `binding:"required,alphanum,len=32" goal:"<uuid>readonly,unique,globalSearch" gorm:"unique"`
 	UserID     uint      `goal:"<number>autowired"`
-	User       User      `binding:"required" goal:"<dropdown>postonly,belongTo=auth.User.Username,filter"`
+	User       User      `binding:"required" goal:"<dropdown>postonly,belongTo=auth.User.Username,filter,globalSearch"`
 	ExpireDate time.Time `binding:"required" goal:"<calendar>showTime,showIcon,sortable,desc" gorm:"index"`
 }
 
