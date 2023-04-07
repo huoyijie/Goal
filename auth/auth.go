@@ -2,42 +2,26 @@ package auth
 
 import (
 	"fmt"
-	"time"
 )
 
-type User struct {
-	ID uint `goal:"<number>primary,sortable,asc" gorm:"primaryKey"`
-
-	Username string `validate:"required,alphanum,min=3,max=40" binding:"required,alphanum,min=3,max=40" goal:"<text>unique,sortable,globalSearch" gorm:"unique"`
-	Email    string `validate:"required,email" binding:"required,email" goal:"<text>unique,sortable,globalSearch" gorm:"unique"`
-	Password string `validate:"required,min=8" binding:"required,min=8" goal:"<password>secret,hidden"`
-
-	IsSuperuser bool `goal:"<switch>readonly"`
-	IsActive    bool `goal:"<switch>"`
-
-	Creator uint `goal:"<number>autowired" gorm:"index"`
+func (*User) TableName() string {
+	return "auth_users"
 }
 
 func (u *User) Sub() string {
 	return fmt.Sprintf("user-%d", u.ID)
 }
 
-type Role struct {
-	ID      uint   `goal:"<number>primary,sortable,asc" gorm:"primaryKey"`
-	Name    string `binding:"required,alphanum,min=3,max=40" goal:"<text>unique,sortable,globalSearch" gorm:"unique"`
-	Creator uint   `goal:"<number>autowired" gorm:"index"`
+func (*Role) TableName() string {
+	return "auth_roles"
 }
 
 func (r *Role) RoleID() string {
 	return fmt.Sprintf("role-%d", r.ID)
 }
 
-type Session struct {
-	ID         uint      `goal:"<number>primary,hidden" gorm:"primaryKey"`
-	Key        string    `binding:"required,alphanum,len=32" goal:"<uuid>readonly,unique,globalSearch" gorm:"unique"`
-	UserID     uint      `goal:"<number>autowired"`
-	User       User      `binding:"required" goal:"<dropdown>postonly,belongTo=auth.User.Username,filter,globalSearch"`
-	ExpireDate time.Time `binding:"required" goal:"<calendar>showTime,showIcon,sortable,desc" gorm:"index"`
+func (*Session) TableName() string {
+	return "auth_sessions"
 }
 
 func (s *Session) Sub() string {

@@ -1,0 +1,47 @@
+package: admin
+name: OperationLog
+fields:
+    - name: ID
+      storageRules:
+        - primaryKey
+      component: number
+      componentRules:
+        - uint
+        - hidden
+    - name: UserID
+      storageRules:
+        - index
+      component: number
+      componentRules:
+        - uint
+        - hidden
+    - name: User
+      component: dropdown
+      componentRules:
+        - '@belongTo=auth.User.Username'
+        - sortable
+        - globalSearch
+    - name: Date
+      storageRules:
+        - index
+      component: calendar
+      componentRules:
+        - showTime
+        - sortable
+        - desc
+    - name: IP
+      component: text
+    - name: Group
+      component: text
+      componentRules:
+        - hidden
+    - name: Item
+      component: text
+      componentRules:
+        - hidden
+    - name: Action
+      component: text
+    - name: ObjectID
+      component: number
+      componentRules:
+        - uint

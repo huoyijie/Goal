@@ -266,6 +266,28 @@ func (f *Float) Unmarshal(token string) {
 	}
 }
 
+type Uint bool
+
+// Marshal implements Tag
+func (u *Uint) Marshal() (token string) {
+	if *u {
+		token = Key(u)
+	}
+	return
+}
+
+// Match implements Tag
+func (u *Uint) Match(token string) bool {
+	return strings.Contains(token, Key(u))
+}
+
+// Unmarshal implements Tag
+func (u *Uint) Unmarshal(token string) {
+	if u.Match(token) {
+		*u = true
+	}
+}
+
 type Sortable bool
 
 // Marshal implements Tag
@@ -367,6 +389,7 @@ var (
 	_ Tag = (*Filter)(nil)
 	_ Tag = (*ShowButtons)(nil)
 	_ Tag = (*Float)(nil)
+	_ Tag = (*Uint)(nil)
 	_ Tag = (*Sortable)(nil)
 	_ Tag = (*Asc)(nil)
 	_ Tag = (*Desc)(nil)

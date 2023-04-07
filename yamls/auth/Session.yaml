@@ -1,0 +1,46 @@
+package: auth
+name: Session
+fields:
+    - name: ID
+      storageRules:
+        - primaryKey
+      component: number
+      componentRules:
+        - uint
+        - hidden
+    - name: Key
+      storageRules:
+        - unique
+      component: uuid
+      componentRules:
+        - readonly
+        - globalSearch
+      validateRules:
+        - required
+        - alphanum
+        - '@len=32'
+    - name: UserID
+      component: number
+      componentRules:
+        - uint
+        - autowired
+    - name: User
+      component: dropdown
+      componentRules:
+        - '@belongTo=User.Username'
+        - postonly
+        - filter
+        - globalSearch
+      validateRules:
+        - required
+    - name: ExpireDate
+      storageRules:
+        - index
+      component: calendar
+      componentRules:
+        - showTime
+        - showIcon
+        - sortable
+        - desc
+      validateRules:
+        - required

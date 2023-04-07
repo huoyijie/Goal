@@ -5,6 +5,7 @@ type Number struct {
 	Base
 	ShowButtons `json:",omitempty"`
 	Float       `json:",omitempty"`
+	Uint        `json:",omitempty"`
 	Min         `json:",omitempty"`
 	Max         `json:",omitempty"`
 }

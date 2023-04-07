@@ -1,0 +1,28 @@
+package: cdn
+name: Resource
+fields:
+    - name: ID
+      storageRules:
+        - primaryKey
+      component: number
+      componentRules:
+        - uint
+        - sortable
+        - desc
+    - name: File
+      storageRules:
+        - unique
+      component: file
+      componentRules:
+        - '@uploadTo=uploads'
+        - postonly
+        - globalSearch
+      validateRules:
+        - required
+    - name: Creator
+      storageRules:
+        - index
+      component: number
+      componentRules:
+        - uint
+        - autowired

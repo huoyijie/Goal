@@ -26,7 +26,12 @@ func main() {
 	flag.Parse()
 
 	validate := validator.New()
-	if err := validate.Struct(user); err != nil {
+
+	if err := validate.Var(user.Username, "required,alphanum,min=3,max=40"); err != nil {
+		util.LogFatal(err)
+	}
+
+	if err := validate.Var(user.Email, "required,email"); err != nil {
 		util.LogFatal(err)
 	}
 

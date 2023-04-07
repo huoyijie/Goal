@@ -1,0 +1,30 @@
+package: auth
+name: Role
+fields:
+    - name: ID
+      storageRules:
+        - primaryKey
+      component: number
+      componentRules:
+        - uint
+        - sortable
+        - asc
+    - name: Name
+      storageRules:
+        - unique
+      component: text
+      componentRules:
+        - sortable
+        - globalSearch
+      validateRules:
+        - required
+        - alphanum
+        - '@min=3'
+        - '@max=40'
+    - name: Creator
+      storageRules:
+        - index
+      component: number
+      componentRules:
+        - uint
+        - autowired
