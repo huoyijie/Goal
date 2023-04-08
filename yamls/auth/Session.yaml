@@ -1,46 +1,47 @@
+# yaml-language-server: $schema=https://cdn.huoyijie.cn/uploads/2023/04/goal-schema-v0.0.10.json
 package: auth
 name: Session
 fields:
-    - name: ID
-      storageRules:
-        - primaryKey
-      component: number
-      componentRules:
-        - uint
-        - hidden
-    - name: Key
-      storageRules:
-        - unique
-      component: uuid
-      componentRules:
-        - readonly
-        - globalSearch
-      validateRules:
-        - required
-        - alphanum
-        - '@len=32'
-    - name: UserID
-      component: number
-      componentRules:
-        - uint
-        - autowired
-    - name: User
-      component: dropdown
-      componentRules:
-        - '@belongTo=User.Username'
-        - postonly
-        - filter
-        - globalSearch
-      validateRules:
-        - required
-    - name: ExpireDate
-      storageRules:
-        - index
-      component: calendar
-      componentRules:
-        - showTime
-        - showIcon
-        - sortable
-        - desc
-      validateRules:
-        - required
+  - name: ID
+    database:
+      primarykey: true
+    view:
+      name: number
+      uint: true
+      hidden: true
+  - name: Key
+    database:
+      unique: true
+    view:
+      name: uuid
+      readonly: true
+      globalsearch: true
+    validator:
+      required: true
+      alphanum: true
+      len: 32
+  - name: UserID
+    view:
+      name: number
+      uint: true
+      autowired: true
+  - name: User
+    view:
+      name: dropdown
+      filter: true
+      belongto: User.Username
+      postonly: true
+      globalsearch: true
+    validator:
+      required: true
+  - name: ExpireDate
+    database:
+      index: true
+    view:
+      name: calendar
+      showtime: true
+      showicon: true
+      sortable: true
+      desc: true
+    validator:
+      required: true

@@ -1,54 +1,56 @@
+# yaml-language-server: $schema=https://cdn.huoyijie.cn/uploads/2023/04/goal-schema-v0.0.10.json
 package: auth
 name: User
 fields:
-    - name: ID
-      storageRules:
-        - primaryKey
-      component: number
-      componentRules:
-        - uint
-        - sortable
-        - asc
-    - name: Username
-      storageRules:
-        - unique
-      component: text
-      componentRules:
-        - sortable
-        - globalSearch
-      validateRules:
-        - required
-        - alphanum
-        - '@min=3'
-        - '@max=40'
-    - name: Email
-      storageRules:
-        - unique
-      component: text
-      componentRules:
-        - sortable
-        - globalSearch
-      validateRules:
-        - required
-        - email
-    - name: Password
-      component: password
-      componentRules:
-        - secret
-        - hidden
-      validateRules:
-        - required
-        - '@min=8'
-    - name: IsSuperuser
-      component: switch
-      componentRules:
-        - readonly
-    - name: IsActive
-      component: switch
-    - name: Creator
-      storageRules:
-        - index
-      component: number
-      componentRules:
-        - uint
-        - autowired
+  - name: ID
+    database:
+      primarykey: true
+    view:
+      name: number
+      uint: true
+      sortable: true
+      asc: true
+  - name: Username
+    database:
+      unique: true
+    view:
+      name: text
+      sortable: true
+      globalsearch: true
+    validator:
+      required: true
+      alphanum: true
+      min: 3
+      max: 40
+  - name: Email
+    database:
+      unique: true
+    view:
+      name: text
+      sortable: true
+      globalsearch: true
+    validator:
+      required: true
+      email: true
+  - name: Password
+    view:
+      name: password
+      secret: true
+      hidden: true
+    validator:
+      required: true
+      min: 8
+  - name: IsSuperuser
+    view:
+      name: switch
+      readonly: true
+  - name: IsActive
+    view:
+      name: switch
+  - name: Creator
+    database:
+      index: true
+    view:
+      name: number
+      uint: true
+      autowired: true

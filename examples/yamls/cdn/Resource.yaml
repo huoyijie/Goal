@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://cdn.huoyijie.cn/uploads/2023/04/goal-schema-v0.0.10.json
-package: auth
-name: Role
+package: cdn
+name: Resource
 fields:
   - name: ID
     database:
@@ -9,19 +9,17 @@ fields:
       name: number
       uint: true
       sortable: true
-      asc: true
-  - name: Name
+      desc: true
+  - name: File
     database:
       unique: true
     view:
-      name: text
-      sortable: true
+      name: file
+      uploadto: uploads
+      postonly: true
       globalsearch: true
     validator:
       required: true
-      alphanum: true
-      min: 3
-      max: 40
   - name: Creator
     database:
       index: true

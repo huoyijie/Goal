@@ -1,47 +1,50 @@
+# yaml-language-server: $schema=https://cdn.huoyijie.cn/uploads/2023/04/goal-schema-v0.0.10.json
 package: admin
 name: OperationLog
 fields:
-    - name: ID
-      storageRules:
-        - primaryKey
-      component: number
-      componentRules:
-        - uint
-        - hidden
-    - name: UserID
-      storageRules:
-        - index
-      component: number
-      componentRules:
-        - uint
-        - hidden
-    - name: User
-      component: dropdown
-      componentRules:
-        - '@belongTo=auth.User.Username'
-        - sortable
-        - globalSearch
-    - name: Date
-      storageRules:
-        - index
-      component: calendar
-      componentRules:
-        - showTime
-        - sortable
-        - desc
-    - name: IP
-      component: text
-    - name: Group
-      component: text
-      componentRules:
-        - hidden
-    - name: Item
-      component: text
-      componentRules:
-        - hidden
-    - name: Action
-      component: text
-    - name: ObjectID
-      component: number
-      componentRules:
-        - uint
+  - name: ID
+    database:
+      primarykey: true
+    view:
+      name: number
+      uint: true
+      hidden: true
+  - name: UserID
+    database:
+      index: true
+    view:
+      name: number
+      uint: true
+      hidden: true
+  - name: User
+    view:
+      name: dropdown
+      belongto: auth.User.Username
+      sortable: true
+      globalsearch: true
+  - name: Date
+    database:
+      index: true
+    view:
+      name: calendar
+      showtime: true
+      sortable: true
+      desc: true
+  - name: IP
+    view:
+      name: text
+  - name: Group
+    view:
+      name: text
+      hidden: true
+  - name: Item
+    view:
+      name: text
+      hidden: true
+  - name: Action
+    view:
+      name: text
+  - name: ObjectID
+    view:
+      name: number
+      uint: true
