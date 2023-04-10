@@ -13,7 +13,7 @@ type OperationLog struct {
 
     UserID uint `gorm:"index" goal:"<number>hidden,uint"`
     User auth.User `goal:"<dropdown>belongTo=auth.User.Username,sortable,globalSearch"`
-    Date time.Time `gorm:"index" goal:"<calendar>sortable,showTime"`
+    Date time.Time `gorm:"index" goal:"<calendar>sortable,desc,showTime"`
     IP string `goal:"<text>"`
     Group string `goal:"<text>hidden"`
     Item string `goal:"<text>hidden"`

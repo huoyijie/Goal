@@ -24,6 +24,7 @@ fields:
       name: calendar
       showtime: true
       sortable: true
+      desc: true
   - name: IP
     view:
       name: text
