@@ -5,9 +5,9 @@ import (
 
 	"github.com/casbin/casbin/v2"
 	"github.com/gin-gonic/gin"
-	"github.com/huoyijie/goal/admin"
-	"github.com/huoyijie/goal/auth"
-	"github.com/huoyijie/goal/web"
+	"github.com/huoyijie/Goal/admin"
+	"github.com/huoyijie/Goal/auth"
+	"github.com/huoyijie/Goal/web"
 	"gorm.io/gorm"
 )
 
@@ -45,7 +45,8 @@ func GetPerms(models []any, enforcer *casbin.Enforcer) gin.HandlerFunc {
 			}
 		}
 
-		role := auth.Role{ID: param.RoleID}
+		role := auth.Role{}
+		role.ID = param.RoleID
 		permissions := enforcer.GetPermissionsForUser(role.RoleID())
 		rolePerms := []web.Perm{}
 		for _, p := range permissions {
@@ -73,7 +74,8 @@ func ChangePerms(db *gorm.DB, enforcer *casbin.Enforcer) gin.HandlerFunc {
 			c.AbortWithStatus(http.StatusBadRequest)
 			return
 		}
-		role := auth.Role{ID: param.RoleID}
+		role := auth.Role{}
+		role.ID = param.RoleID
 		var selected []web.Perm
 		if err := c.BindJSON(&selected); err != nil {
 			return
@@ -123,7 +125,8 @@ func GetRoles(db *gorm.DB, enforcer *casbin.Enforcer) gin.HandlerFunc {
 			}
 		}
 
-		user := auth.User{ID: param.UserID}
+		user := auth.User{}
+		user.ID = param.UserID
 		userRoles, err := enforcer.GetRolesForUser(user.Sub())
 		if err != nil {
 			c.AbortWithStatus(http.StatusInternalServerError)
@@ -162,7 +165,8 @@ func ChangeRoles(db *gorm.DB, enforcer *casbin.Enforcer) gin.HandlerFunc {
 			c.AbortWithStatus(http.StatusBadRequest)
 			return
 		}
-		user := auth.User{ID: param.UserID}
+		user := auth.User{}
+		user.ID = param.UserID
 		var selected []auth.Role
 		if err := c.BindJSON(&selected); err != nil {
 			return

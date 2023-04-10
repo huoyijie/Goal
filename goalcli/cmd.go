@@ -7,9 +7,9 @@ import (
 	"os"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/huoyijie/goal"
-	"github.com/huoyijie/goal/auth"
-	"github.com/huoyijie/goal/util"
+	"github.com/huoyijie/Goal"
+	"github.com/huoyijie/Goal/auth"
+	"github.com/huoyijie/Goal/util"
 	"golang.org/x/term"
 )
 

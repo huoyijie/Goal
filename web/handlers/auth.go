@@ -7,9 +7,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/huoyijie/goal/auth"
-	"github.com/huoyijie/goal/util"
-	"github.com/huoyijie/goal/web"
+	"github.com/huoyijie/Goal/auth"
+	"github.com/huoyijie/Goal/util"
+	"github.com/huoyijie/Goal/web"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -40,7 +40,7 @@ func Signin(db *gorm.DB) gin.HandlerFunc {
 		// save new session to db
 		newSession := &auth.Session{
 			Key:        sessionid,
-			UserID:     user.ID,
+			User:       user,
 			ExpireDate: time.Now().Add(3 * 24 * time.Hour),
 		}
 		if err := db.Create(newSession).Error; err != nil {
@@ -49,7 +49,6 @@ func Signin(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		// save new session to request context
-		newSession.User = user
 		c.Set("session", newSession)
 
 		// save new sessionid to cookie

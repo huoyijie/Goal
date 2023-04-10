@@ -10,10 +10,10 @@ import (
 
 	"github.com/casbin/casbin/v2"
 	"github.com/gin-gonic/gin"
-	"github.com/huoyijie/goal/admin"
-	"github.com/huoyijie/goal/auth"
-	"github.com/huoyijie/goal/util"
-	"github.com/huoyijie/goal/web/tag"
+	"github.com/huoyijie/Goal/admin"
+	"github.com/huoyijie/Goal/auth"
+	"github.com/huoyijie/Goal/util"
+	"github.com/huoyijie/Goal/web/tag"
 	"gorm.io/gorm"
 )
 
@@ -84,6 +84,14 @@ func GetBindingTag(field reflect.StructField) string {
 func Reflect(modelType reflect.Type) (secrets, preloads, columns []Column) {
 	for i := 0; i < modelType.NumField(); i++ {
 		field := modelType.Field(i)
+		if field.Name == "Base" {
+			s, p, c := Reflect(field.Type)
+			secrets = append(secrets, s...)
+			preloads = append(preloads, p...)
+			columns = append(columns, c...)
+			continue
+		}
+
 		validateRule := GetBindingTag(field)
 
 		component := GetComponent(field)

@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 
-	"github.com/huoyijie/goal"
-	"github.com/huoyijie/goal/examples/cdn"
-	"github.com/huoyijie/goal/util"
+	goal "github.com/huoyijie/Goal"
+	"github.com/huoyijie/Goal/examples/cdn"
+	"github.com/huoyijie/Goal/util"
 )
 
 func main() {

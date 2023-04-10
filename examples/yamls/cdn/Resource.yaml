@@ -1,15 +1,9 @@
 # yaml-language-server: $schema=https://cdn.huoyijie.cn/uploads/2023/04/goal-schema-v0.0.10.json
 package: cdn
 name: Resource
+database:
+  embeddingbase: true
 fields:
-  - name: ID
-    database:
-      primarykey: true
-    view:
-      name: number
-      uint: true
-      sortable: true
-      desc: true
   - name: File
     database:
       unique: true
@@ -20,10 +14,3 @@ fields:
       globalsearch: true
     validator:
       required: true
-  - name: Creator
-    database:
-      index: true
-    view:
-      name: number
-      uint: true
-      autowired: true

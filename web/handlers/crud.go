@@ -11,10 +11,10 @@ import (
 
 	"github.com/casbin/casbin/v2"
 	"github.com/gin-gonic/gin"
-	"github.com/huoyijie/goal/auth"
-	"github.com/huoyijie/goal/util"
-	"github.com/huoyijie/goal/web"
-	"github.com/huoyijie/goal/web/tag"
+	"github.com/huoyijie/Goal/auth"
+	"github.com/huoyijie/Goal/util"
+	"github.com/huoyijie/Goal/web"
+	"github.com/huoyijie/Goal/web/tag"
 	"gorm.io/gorm"
 )
 
@@ -34,7 +34,8 @@ func crud(c *gin.Context, action string, db *gorm.DB, enforcer *casbin.Enforcer)
 		switch r := record.(type) {
 		case *auth.User:
 			if action == "put" && r.Password == web.PASSWORD_PLACEHOLDER {
-				o := &auth.User{ID: r.ID}
+				o := &auth.User{}
+				o.ID = r.ID
 				if err := db.First(o).Error; err != nil {
 					c.AbortWithStatus(http.StatusInternalServerError)
 					return
@@ -76,7 +77,12 @@ func crudGet(c *gin.Context, db *gorm.DB, mine bool) {
 	records := reflect.New(reflect.SliceOf(modelType)).Interface()
 	tx := db.Model(model)
 	if mine {
-		tx = tx.Where("creator = ?", session.UserID)
+		conditionVal := reflect.New(modelType)
+		creator := conditionVal.Elem().FieldByName("Creator")
+		if creator.IsValid() {
+			creator.SetUint(uint64(session.UserID))
+			tx = tx.Where(conditionVal.Interface())
+		}
 	}
 	for _, column := range preloads {
 		tx = tx.Joins(column.Name)
@@ -168,13 +174,15 @@ func CrudBatchDelete(db *gorm.DB, enforcer *casbin.Enforcer) gin.HandlerFunc {
 		switch model.(type) {
 		case *auth.Role:
 			for _, id := range ids {
-				role := auth.Role{ID: id}
+				role := auth.Role{}
+				role.ID = id
 				enforcer.DeletePermissionsForUser(role.RoleID())
 				enforcer.DeleteRole(role.RoleID())
 			}
 		case *auth.User:
 			for _, id := range ids {
-				user := auth.User{ID: id}
+				user := auth.User{}
+				user.ID = id
 				enforcer.DeleteRolesForUser(user.Sub())
 				enforcer.DeleteUser(user.Sub())
 			}

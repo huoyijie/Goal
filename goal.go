@@ -8,12 +8,12 @@ import (
 	"github.com/casbin/casbin/v2/model"
 	gormadapter "github.com/casbin/gorm-adapter/v3"
 	"github.com/gin-gonic/gin"
-	"github.com/huoyijie/goal/admin"
-	"github.com/huoyijie/goal/auth"
-	"github.com/huoyijie/goal/util"
-	"github.com/huoyijie/goal/web"
-	"github.com/huoyijie/goal/web/handlers"
-	"github.com/huoyijie/goal/web/middlewares"
+	"github.com/huoyijie/Goal/admin"
+	"github.com/huoyijie/Goal/auth"
+	"github.com/huoyijie/Goal/util"
+	"github.com/huoyijie/Goal/web"
+	"github.com/huoyijie/Goal/web/handlers"
+	"github.com/huoyijie/Goal/web/middlewares"
 	"gorm.io/gorm"
 )
 

@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/huoyijie/goal/util"
+	"github.com/huoyijie/Goal/util"
 )
 
 var COMPONETS = []Component{

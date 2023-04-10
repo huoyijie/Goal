@@ -1,15 +1,9 @@
 # yaml-language-server: $schema=https://cdn.huoyijie.cn/uploads/2023/04/goal-schema-v0.0.10.json
 package: auth
 name: User
+database:
+  embeddingbase: true
 fields:
-  - name: ID
-    database:
-      primarykey: true
-    view:
-      name: number
-      uint: true
-      sortable: true
-      asc: true
   - name: Username
     database:
       unique: true
@@ -47,10 +41,3 @@ fields:
   - name: IsActive
     view:
       name: switch
-  - name: Creator
-    database:
-      index: true
-    view:
-      name: number
-      uint: true
-      autowired: true

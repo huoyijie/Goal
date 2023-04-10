@@ -5,7 +5,7 @@ import (
 
 	"github.com/casbin/casbin/v2"
 	"github.com/gin-gonic/gin"
-	"github.com/huoyijie/goal/web"
+	"github.com/huoyijie/Goal/web"
 )
 
 func Menus(models []any, enforcer *casbin.Enforcer) gin.HandlerFunc {

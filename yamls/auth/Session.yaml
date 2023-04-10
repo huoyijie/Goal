@@ -1,14 +1,9 @@
 # yaml-language-server: $schema=https://cdn.huoyijie.cn/uploads/2023/04/goal-schema-v0.0.10.json
 package: auth
 name: Session
+database:
+  embeddingbase: true
 fields:
-  - name: ID
-    database:
-      primarykey: true
-    view:
-      name: number
-      uint: true
-      hidden: true
   - name: Key
     database:
       unique: true
@@ -42,6 +37,5 @@ fields:
       showtime: true
       showicon: true
       sortable: true
-      desc: true
     validator:
       required: true

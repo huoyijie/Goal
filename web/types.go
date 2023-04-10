@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/huoyijie/goal/web/tag"
+	"github.com/huoyijie/Goal/web/tag"
 )
 
 const (

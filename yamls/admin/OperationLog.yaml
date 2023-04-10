@@ -1,14 +1,9 @@
 # yaml-language-server: $schema=https://cdn.huoyijie.cn/uploads/2023/04/goal-schema-v0.0.10.json
 package: admin
 name: OperationLog
+database:
+  embeddingbase: true
 fields:
-  - name: ID
-    database:
-      primarykey: true
-    view:
-      name: number
-      uint: true
-      hidden: true
   - name: UserID
     database:
       index: true
@@ -29,7 +24,6 @@ fields:
       name: calendar
       showtime: true
       sortable: true
-      desc: true
   - name: IP
     view:
       name: text

@@ -9,8 +9,8 @@ import (
 	"github.com/casbin/casbin/v2"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/huoyijie/goal/auth"
-	"github.com/huoyijie/goal/web"
+	"github.com/huoyijie/Goal/auth"
+	"github.com/huoyijie/Goal/web"
 	"gorm.io/gorm"
 )
 
