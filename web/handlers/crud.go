@@ -66,28 +66,96 @@ func crud(c *gin.Context, action string, db *gorm.DB, enforcer *casbin.Enforcer)
 	c.JSON(http.StatusOK, web.Result{Data: record})
 }
 
+func crudGetScopes(c *gin.Context, model any, modelType reflect.Type, session *auth.Session, preloads []web.Column, mine bool) func(*gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		tx := db.Model(model)
+		if mine {
+			conditionVal := reflect.New(modelType)
+			creator := conditionVal.Elem().FieldByName("Creator")
+			if creator.IsValid() {
+				creator.SetUint(uint64(session.UserID))
+				tx = tx.Where(conditionVal.Interface())
+			}
+		}
+
+		if web.IsLazy(model) {
+			lazyParam := &web.LazyParam{}
+			util.Log(c.ShouldBind(lazyParam))
+			// todo
+			// if lazyParam.Filters != "" {
+			// 	var filters []any
+			// 	json.Unmarshal([]byte(lazyParam.Filters), &filters)
+			// 	fmt.Println(filters...)
+			// }
+
+			if lazyParam.Offset > 0 {
+				tx = tx.Offset(lazyParam.Offset)
+			}
+			if lazyParam.Limit > 0 {
+				tx = tx.Limit(lazyParam.Limit)
+			}
+
+			if lazyParam.SortField != "" {
+				var table, field string
+				if tmp := strings.Split(lazyParam.SortField, "."); len(tmp) == 2 {
+					table = tmp[0]
+					field = db.NamingStrategy.ColumnName("", tmp[1])
+				} else {
+					if web.IsTabler(modelType) {
+						m := reflect.ValueOf(model).Elem().MethodByName("TableName")
+						table = m.Call([]reflect.Value{})[0].String()
+					} else {
+						table = db.NamingStrategy.TableName(modelType.Name())
+					}
+					field = db.NamingStrategy.ColumnName("", tmp[0])
+				}
+				sortOrder := "asc"
+				if lazyParam.SortOrder == -1 {
+					sortOrder = "desc"
+				}
+				orderBy := fmt.Sprintf("`%s`.`%s` %s", table, field, sortOrder)
+				tx = tx.Order(orderBy)
+			}
+		}
+
+		for _, column := range preloads {
+			tx = tx.Joins(column.Name)
+		}
+		return tx
+	}
+}
+
+func crudCountScopes(model any, modelType reflect.Type, session *auth.Session, mine bool) func(*gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		tx := db.Model(model)
+		if mine {
+			conditionVal := reflect.New(modelType)
+			creator := conditionVal.Elem().FieldByName("Creator")
+			if creator.IsValid() {
+				creator.SetUint(uint64(session.UserID))
+				tx = tx.Where(conditionVal.Interface())
+			}
+		}
+		return tx
+	}
+}
+
 func crudGet(c *gin.Context, db *gorm.DB, mine bool) {
 	model, _ := c.Get("model")
 	mt, _ := c.Get("modelType")
 	modelType := mt.(reflect.Type)
 	session := web.GetSession(c)
 
-	secrets, preloads, _ := web.Reflect(modelType)
+	var total int64
+	if err := db.Scopes(crudCountScopes(model, modelType, session, mine)).Count(&total).Error; err != nil {
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
 
+	secrets, preloads, _ := web.Reflect(modelType)
 	records := reflect.New(reflect.SliceOf(modelType)).Interface()
-	tx := db.Model(model)
-	if mine {
-		conditionVal := reflect.New(modelType)
-		creator := conditionVal.Elem().FieldByName("Creator")
-		if creator.IsValid() {
-			creator.SetUint(uint64(session.UserID))
-			tx = tx.Where(conditionVal.Interface())
-		}
-	}
-	for _, column := range preloads {
-		tx = tx.Joins(column.Name)
-	}
-	if err := tx.Find(records).Error; err != nil {
+
+	if err := db.Scopes(crudGetScopes(c, model, modelType, session, preloads, mine)).Find(records).Error; err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
@@ -104,10 +172,10 @@ func crudGet(c *gin.Context, db *gorm.DB, mine bool) {
 		}
 	}
 
-	c.JSON(http.StatusOK, web.Result{Data: records})
+	c.JSON(http.StatusOK, web.Result{Data: &web.RecordList{Total: uint(total), List: records}})
 }
 
-func CrudColumns(enforcer *casbin.Enforcer) gin.HandlerFunc {
+func CrudDataTable(enforcer *casbin.Enforcer) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		mt, _ := c.Get("modelType")
 		modelType := mt.(reflect.Type)
@@ -125,7 +193,8 @@ func CrudColumns(enforcer *casbin.Enforcer) gin.HandlerFunc {
 			}
 		}
 
-		c.JSON(http.StatusOK, web.Result{Data: web.Columns{
+		c.JSON(http.StatusOK, web.Result{Data: web.DataTable{
+			Lazy:    web.IsLazy(model),
 			Columns: columns,
 			Perms:   perms,
 		}})

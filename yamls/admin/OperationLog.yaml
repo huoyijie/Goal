@@ -3,6 +3,8 @@ package: admin
 name: OperationLog
 database:
   embeddingbase: true
+view:
+  lazy: true
 fields:
   - name: UserID
     database:

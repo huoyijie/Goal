@@ -32,11 +32,6 @@ type Component struct {
 	Tag  tag.Component
 }
 
-type Columns struct {
-	Columns []Column `json:"columns"`
-	Perms   *Perms   `json:"perms"`
-}
-
 type Column struct {
 	Name         string
 	Component    Component
@@ -48,6 +43,17 @@ type Perms struct {
 	Delete bool `json:"delete"`
 	Put    bool `json:"put"`
 	Get    bool `json:"get"`
+}
+
+type DataTable struct {
+	Lazy    bool     `json:"lazy"`
+	Columns []Column `json:"columns"`
+	Perms   *Perms   `json:"perms"`
+}
+
+type RecordList struct {
+	Total uint `json:"total"`
+	List  any  `json:"list"`
 }
 
 type Menu struct {
@@ -82,4 +88,12 @@ type PermsParam struct {
 
 type RolesParam struct {
 	UserID uint `uri:"userID"`
+}
+
+type LazyParam struct {
+	Offset    int    `form:"offset"`
+	Limit     int    `form:"limit"`
+	SortField string `form:"sortField"`
+	SortOrder int    `form:"sortOrder"`
+	Filters   string `form:"filters"`
 }
