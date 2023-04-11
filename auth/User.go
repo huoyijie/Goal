@@ -15,3 +15,6 @@ type User struct {
     IsSuperuser bool `goal:"<switch>readonly"`
     IsActive bool `goal:"<switch>"`
 }
+
+func (*User) Lazy() {}
+var _ goalgenerator.Lazy = (*User)(nil)

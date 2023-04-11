@@ -222,3 +222,57 @@ func IsLazy(model any) bool {
 func IsTabler(t reflect.Type) bool {
 	return t.Implements(reflect.TypeOf((*schema.Tabler)(nil)).Elem())
 }
+
+func TableName(db *gorm.DB, model any, modelType reflect.Type) (table string) {
+	if IsTabler(modelType) {
+		m := reflect.ValueOf(model).Elem().MethodByName("TableName")
+		table = m.Call([]reflect.Value{})[0].String()
+	} else {
+		table = db.NamingStrategy.TableName(modelType.Name())
+	}
+	return
+}
+
+func Convert(matchMode ,value string) (condition string) {
+	switch matchMode {
+	case "startsWith":
+		condition = " LIKE '" + value + "%'"
+	case "contains":
+		condition = " LIKE '%" + value + "%'"
+	case "notContains":
+		condition = " NOT LIKE '%" + value + "%'"
+	case "endsWith":
+		condition = " LIKE '%" + value + "'"
+	case "equals":
+		condition = " = '" + value + "'"
+	case "notEquals":
+		condition = " != '" + value + "'"
+	case "in":
+		panic("not implement")
+	case "lt":
+		condition = " < " + value
+	case "lte":
+		condition = " <= " + value
+	case "gt":
+		condition = " > " + value
+	case "gte":
+		condition = " >= " + value
+	case "between":
+		panic("not implement")
+	case "dateIs":
+		d, _ := time.Parse(time.RFC3339, value)
+		d1 := d.AddDate(0, 0, 1).Format(time.RFC3339)
+		condition = " BETWEEN '" + value + "' and '" + d1 + "'"
+	case "dateIsNot":
+		d, _ := time.Parse(time.RFC3339, value)
+		d1 := d.AddDate(0, 0, 1).Format(time.RFC3339)
+		condition = " NOT BETWEEN '" + value + "' and '" + d1 + "'"
+	case "dateBefore":
+		condition = " < '" + value + "'"
+	case "dateAfter":
+		d, _ := time.Parse(time.RFC3339, value)
+		d1 := d.AddDate(0, 0, 1).Format(time.RFC3339)
+		condition = " > '" + d1 + "'"
+	}
+	return
+}

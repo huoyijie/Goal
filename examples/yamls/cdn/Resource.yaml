@@ -3,6 +3,8 @@ package: cdn
 name: Resource
 database:
   embeddingbase: true
+view:
+  lazy: true
 fields:
   - name: File
     database:

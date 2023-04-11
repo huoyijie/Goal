@@ -3,6 +3,8 @@ package: auth
 name: User
 database:
   embeddingbase: true
+view:
+  lazy: true
 fields:
   - name: Username
     database:

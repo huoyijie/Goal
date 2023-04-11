@@ -12,6 +12,7 @@ import (
 	"github.com/glebarez/sqlite"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 func init() {
@@ -73,7 +74,18 @@ func GetWithPrefix(elems []string, prefix string) string {
 }
 
 func OpenSqliteDB() (db *gorm.DB) {
-	db, err := gorm.Open(sqlite.Open(filepath.Join(WorkDir(), "goal.db")), &gorm.Config{})
+	newLogger := logger.New(
+		log.New(os.Stdout, "\r\n", log.LstdFlags),
+		logger.Config{
+			SlowThreshold:             time.Second,
+			LogLevel:                  logger.Info,
+			IgnoreRecordNotFoundError: true,
+			ParameterizedQueries:      false,
+			Colorful:                  true,
+		},
+	)
+
+	db, err := gorm.Open(sqlite.Open(filepath.Join(WorkDir(), "goal.db")), &gorm.Config{Logger: newLogger})
 	LogFatal(err)
 	return
 }

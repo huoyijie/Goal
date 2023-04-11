@@ -1,11 +1,13 @@
 package handlers
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"path/filepath"
 	"reflect"
+	"strconv"
 	"strings"
 	"time"
 
@@ -66,47 +68,33 @@ func crud(c *gin.Context, action string, db *gorm.DB, enforcer *casbin.Enforcer)
 	c.JSON(http.StatusOK, web.Result{Data: record})
 }
 
-func crudGetScopes(c *gin.Context, model any, modelType reflect.Type, session *auth.Session, preloads []web.Column, mine bool) func(*gorm.DB) *gorm.DB {
-	return func(db *gorm.DB) *gorm.DB {
-		tx := db.Model(model)
-		if mine {
-			conditionVal := reflect.New(modelType)
-			creator := conditionVal.Elem().FieldByName("Creator")
-			if creator.IsValid() {
-				creator.SetUint(uint64(session.UserID))
-				tx = tx.Where(conditionVal.Interface())
-			}
+func preload(preloads []web.Column) func(*gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) (tx *gorm.DB) {
+		tx = db
+		for _, column := range preloads {
+			tx = tx.Joins(column.Name)
 		}
+		return
+	}
+}
 
-		if web.IsLazy(model) {
-			lazyParam := &web.LazyParam{}
-			util.Log(c.ShouldBind(lazyParam))
-			// todo
-			// if lazyParam.Filters != "" {
-			// 	var filters []any
-			// 	json.Unmarshal([]byte(lazyParam.Filters), &filters)
-			// 	fmt.Println(filters...)
-			// }
-
+func pagiSort(model any, modelType reflect.Type, lazyParam *web.LazyParam) func(*gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) (tx *gorm.DB) {
+		tx = db
+		if lazyParam != nil {
 			if lazyParam.Offset > 0 {
 				tx = tx.Offset(lazyParam.Offset)
 			}
 			if lazyParam.Limit > 0 {
 				tx = tx.Limit(lazyParam.Limit)
 			}
-
 			if lazyParam.SortField != "" {
 				var table, field string
 				if tmp := strings.Split(lazyParam.SortField, "."); len(tmp) == 2 {
 					table = tmp[0]
 					field = db.NamingStrategy.ColumnName("", tmp[1])
 				} else {
-					if web.IsTabler(modelType) {
-						m := reflect.ValueOf(model).Elem().MethodByName("TableName")
-						table = m.Call([]reflect.Value{})[0].String()
-					} else {
-						table = db.NamingStrategy.TableName(modelType.Name())
-					}
+					table = web.TableName(db, model, modelType)
 					field = db.NamingStrategy.ColumnName("", tmp[0])
 				}
 				sortOrder := "asc"
@@ -117,26 +105,94 @@ func crudGetScopes(c *gin.Context, model any, modelType reflect.Type, session *a
 				tx = tx.Order(orderBy)
 			}
 		}
-
-		for _, column := range preloads {
-			tx = tx.Joins(column.Name)
-		}
-		return tx
+		return
 	}
 }
 
-func crudCountScopes(model any, modelType reflect.Type, session *auth.Session, mine bool) func(*gorm.DB) *gorm.DB {
-	return func(db *gorm.DB) *gorm.DB {
-		tx := db.Model(model)
-		if mine {
-			conditionVal := reflect.New(modelType)
-			creator := conditionVal.Elem().FieldByName("Creator")
-			if creator.IsValid() {
-				creator.SetUint(uint64(session.UserID))
-				tx = tx.Where(conditionVal.Interface())
+func filters(model any, modelType reflect.Type, session *auth.Session, mine bool, lazyParam *web.LazyParam) func(*gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) (tx *gorm.DB) {
+		tx = db.Model(model)
+		sb := strings.Builder{}
+
+		var hasPrev bool
+		if mine && reflect.ValueOf(model).Elem().FieldByName("Creator").IsValid() {
+			sb.WriteRune('`')
+			sb.WriteString(web.TableName(db, model, modelType))
+			sb.WriteString("`.`creator` = ")
+			sb.WriteString(strconv.FormatUint(uint64(session.UserID), 10))
+			hasPrev = true
+		}
+		if lazyParam != nil && lazyParam.Filters != "" {
+			var filters []any
+			json.Unmarshal([]byte(lazyParam.Filters), &filters)
+		loop:
+			for _, filter := range filters {
+				if hasPrev {
+					sb.WriteString(" and ")
+				}
+				kv := filter.([]any)
+				k := kv[0].(string)
+				if k == "global" {
+					continue loop
+				}
+
+				var table, field string
+				if tmp := strings.Split(k, "."); len(tmp) == 2 {
+					table = tmp[0]
+					field = db.NamingStrategy.ColumnName("", tmp[1])
+				} else {
+					table = web.TableName(db, model, modelType)
+					field = db.NamingStrategy.ColumnName("", tmp[0])
+				}
+
+				v := kv[1].(map[string]any)
+				if value, ok := v["value"]; ok {
+					switch value := value.(type) {
+					case bool:
+						var val int
+						if value {
+							val = 1
+						}
+						matchMode := v["matchMode"].(string)
+						sb.WriteRune('`')
+						sb.WriteString(table)
+						sb.WriteString("`.`")
+						sb.WriteString(field)
+						sb.WriteRune('`')
+						sb.WriteString(web.Convert(matchMode, fmt.Sprintf("%d", val)))
+					}
+				} else {
+					operator := v["operator"].(string)
+					constraints := v["constraints"].([]any)
+					sb.WriteString("( ")
+					var hasOp bool
+					for _, constraint := range constraints {
+						if hasOp {
+							sb.WriteRune(' ')
+							sb.WriteString(operator)
+							sb.WriteRune(' ')
+						}
+						c := constraint.(map[string]any)
+						value := fmt.Sprintf("%v", c["value"])
+						matchMode := c["matchMode"].(string)
+						sb.WriteRune('`')
+						sb.WriteString(table)
+						sb.WriteString("`.`")
+						sb.WriteString(field)
+						sb.WriteRune('`')
+						sb.WriteString(web.Convert(matchMode, value))
+						hasOp = true
+					}
+					sb.WriteString(" )")
+				}
+				hasPrev = true
 			}
 		}
-		return tx
+
+		if sb.Len() > 0 {
+			tx = tx.Where(sb.String())
+		}
+		return
 	}
 }
 
@@ -146,16 +202,29 @@ func crudGet(c *gin.Context, db *gorm.DB, mine bool) {
 	modelType := mt.(reflect.Type)
 	session := web.GetSession(c)
 
+	var lazyParam *web.LazyParam
+	if web.IsLazy(model) {
+		lazyParam = &web.LazyParam{}
+		if err := c.Bind(lazyParam); err != nil {
+			return
+		}
+	}
+
+	secrets, preloads, _ := web.Reflect(modelType)
+
 	var total int64
-	if err := db.Scopes(crudCountScopes(model, modelType, session, mine)).Count(&total).Error; err != nil {
+	if err := db.Scopes(filters(model, modelType, session, mine, lazyParam), preload(preloads)).Count(&total).Error; err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
 
-	secrets, preloads, _ := web.Reflect(modelType)
 	records := reflect.New(reflect.SliceOf(modelType)).Interface()
 
-	if err := db.Scopes(crudGetScopes(c, model, modelType, session, preloads, mine)).Find(records).Error; err != nil {
+	if err := db.Scopes(
+		filters(model, modelType, session, mine, lazyParam),
+		preload(preloads),
+		pagiSort(model, modelType, lazyParam),
+	).Find(records).Error; err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
