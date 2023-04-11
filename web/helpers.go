@@ -233,7 +233,18 @@ func TableName(db *gorm.DB, model any, modelType reflect.Type) (table string) {
 	return
 }
 
-func Convert(matchMode ,value string) (condition string) {
+func TableFieldName(db *gorm.DB, model any, modelType reflect.Type, filterField string) (table, field string) {
+	if tmp := strings.Split(filterField, "."); len(tmp) == 2 {
+		table = tmp[0]
+		field = db.NamingStrategy.ColumnName("", tmp[1])
+	} else {
+		table = TableName(db, model, modelType)
+		field = db.NamingStrategy.ColumnName("", tmp[0])
+	}
+	return
+}
+
+func Convert(matchMode, value string) (condition string) {
 	switch matchMode {
 	case "startsWith":
 		condition = " LIKE '" + value + "%'"
@@ -275,4 +286,13 @@ func Convert(matchMode ,value string) (condition string) {
 		condition = " > '" + d1 + "'"
 	}
 	return
+}
+
+func FilterClause(sb *strings.Builder, table, field, matchMode, value string) {
+	sb.WriteRune('`')
+	sb.WriteString(table)
+	sb.WriteString("`.`")
+	sb.WriteString(field)
+	sb.WriteRune('`')
+	sb.WriteString(Convert(matchMode, value))
 }

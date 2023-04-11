@@ -127,25 +127,41 @@ func filters(model any, modelType reflect.Type, session *auth.Session, mine bool
 			json.Unmarshal([]byte(lazyParam.Filters), &filters)
 		loop:
 			for _, filter := range filters {
+				kv := filter.([]any)
+				k := kv[0].(string)
+				v := kv[1].(map[string]any)
+
+				if k == "global" {
+					_, _, columns := web.Reflect(modelType)
+					for _, c := range columns {
+						base := c.Component.Tag.(tag.IBase).Get()
+						if base.GlobalSearch {
+							filterField := c.Name
+							if base.BelongTo != nil {
+								filterField = fmt.Sprintf("%s.%s", base.BelongTo.Name, base.BelongTo.Field)
+							}
+
+							if hasPrev {
+								sb.WriteString(" and ")
+							}
+
+							// todo: global search support only one column that is text
+							value := v["value"].(string)
+							table, field := web.TableFieldName(db, model, modelType, filterField)
+							matchMode := v["matchMode"].(string)
+							web.FilterClause(&sb, table, field, matchMode, value)
+							hasPrev = true
+							continue loop
+						}
+					}
+				}
+
 				if hasPrev {
 					sb.WriteString(" and ")
 				}
-				kv := filter.([]any)
-				k := kv[0].(string)
-				if k == "global" {
-					continue loop
-				}
 
-				var table, field string
-				if tmp := strings.Split(k, "."); len(tmp) == 2 {
-					table = tmp[0]
-					field = db.NamingStrategy.ColumnName("", tmp[1])
-				} else {
-					table = web.TableName(db, model, modelType)
-					field = db.NamingStrategy.ColumnName("", tmp[0])
-				}
+				table, field := web.TableFieldName(db, model, modelType, k)
 
-				v := kv[1].(map[string]any)
 				if value, ok := v["value"]; ok {
 					switch value := value.(type) {
 					case bool:
@@ -154,12 +170,7 @@ func filters(model any, modelType reflect.Type, session *auth.Session, mine bool
 							val = 1
 						}
 						matchMode := v["matchMode"].(string)
-						sb.WriteRune('`')
-						sb.WriteString(table)
-						sb.WriteString("`.`")
-						sb.WriteString(field)
-						sb.WriteRune('`')
-						sb.WriteString(web.Convert(matchMode, fmt.Sprintf("%d", val)))
+						web.FilterClause(&sb, table, field, matchMode, fmt.Sprintf("%d", val))
 					}
 				} else {
 					operator := v["operator"].(string)
@@ -175,12 +186,7 @@ func filters(model any, modelType reflect.Type, session *auth.Session, mine bool
 						c := constraint.(map[string]any)
 						value := fmt.Sprintf("%v", c["value"])
 						matchMode := c["matchMode"].(string)
-						sb.WriteRune('`')
-						sb.WriteString(table)
-						sb.WriteString("`.`")
-						sb.WriteString(field)
-						sb.WriteRune('`')
-						sb.WriteString(web.Convert(matchMode, value))
+						web.FilterClause(&sb, table, field, matchMode, value)
 						hasOp = true
 					}
 					sb.WriteString(" )")
