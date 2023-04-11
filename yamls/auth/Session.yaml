@@ -13,6 +13,7 @@ fields:
       name: uuid
       readonly: true
       globalsearch: true
+      filter: true
     validator:
       required: true
       alphanum: true
@@ -25,10 +26,9 @@ fields:
   - name: User
     view:
       name: dropdown
-      filter: true
       belongto: User.Username
       postonly: true
-      globalsearch: true
+      filter: true
     validator:
       required: true
   - name: ExpireDate
@@ -40,5 +40,6 @@ fields:
       showicon: true
       sortable: true
       desc: true
+      filter: true
     validator:
       required: true

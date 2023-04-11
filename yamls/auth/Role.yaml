@@ -11,6 +11,7 @@ fields:
       name: text
       sortable: true
       globalsearch: true
+      filter: true
     validator:
       required: true
       alphanum: true

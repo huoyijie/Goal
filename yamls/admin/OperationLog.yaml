@@ -19,6 +19,7 @@ fields:
       belongto: auth.User.Username
       sortable: true
       globalsearch: true
+      filter: true
   - name: Date
     database:
       index: true
@@ -27,9 +28,11 @@ fields:
       showtime: true
       sortable: true
       desc: true
+      filter: true
   - name: IP
     view:
       name: text
+      filter: true
   - name: Group
     view:
       name: text

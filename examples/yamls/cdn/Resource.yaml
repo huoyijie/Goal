@@ -14,5 +14,6 @@ fields:
       uploadto: uploads
       postonly: true
       globalsearch: true
+      filter: true
     validator:
       required: true

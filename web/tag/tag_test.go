@@ -35,14 +35,14 @@ func TestCanlendar(t *testing.T) {
 }
 
 func TestDropdown(t *testing.T) {
-	d := Dropdown{Filter: true}
-	if d.Marshal() != "<dropdown>filter" {
+	d := Dropdown{}
+	if d.Marshal() != "<dropdown>" {
 		t.Error("Marshal error 1")
 	}
 
 	d = Dropdown{}
-	d.Unmarshal("<dropdown>autowired,filter,secret,hidden,belongTo=auth.User.Username")
-	if token := d.Marshal(); token != "<dropdown>autowired,secret,hidden,belongTo=auth.User.Username,filter" {
+	d.Unmarshal("<dropdown>autowired,secret,hidden,belongTo=auth.User.Username")
+	if token := d.Marshal(); token != "<dropdown>autowired,secret,hidden,belongTo=auth.User.Username" {
 		t.Error("Marshal error 2")
 	}
 }

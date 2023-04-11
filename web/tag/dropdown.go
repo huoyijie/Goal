@@ -3,7 +3,6 @@ package tag
 // Object
 type Dropdown struct {
 	Base
-	Filter `json:",omitempty"`
 }
 
 // Head implements Component

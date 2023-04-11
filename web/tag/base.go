@@ -18,6 +18,7 @@ type Base struct {
 	Asc          `json:",omitempty"`
 	Desc         `json:",omitempty"`
 	GlobalSearch `json:",omitempty"`
+	Filter       `json:",omitempty"`
 	BelongTo     *BelongTo `json:",omitempty"`
 }
 

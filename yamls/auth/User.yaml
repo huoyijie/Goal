@@ -13,6 +13,7 @@ fields:
       name: text
       sortable: true
       globalsearch: true
+      filter: true
     validator:
       required: true
       alphanum: true
@@ -24,7 +25,7 @@ fields:
     view:
       name: text
       sortable: true
-      globalsearch: true
+      filter: true
     validator:
       required: true
       email: true
@@ -40,6 +41,8 @@ fields:
     view:
       name: switch
       readonly: true
+      filter: true
   - name: IsActive
     view:
       name: switch
+      filter: true
