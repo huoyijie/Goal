@@ -36,14 +36,15 @@ fields:
   - name: Group
     view:
       name: text
-      hidden: true
+      filter: true
   - name: Item
     view:
       name: text
-      hidden: true
+      filter: true
   - name: Action
     view:
       name: text
+      filter: true
   - name: ObjectID
     view:
       name: number

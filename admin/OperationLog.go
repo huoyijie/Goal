@@ -15,9 +15,9 @@ type OperationLog struct {
     User auth.User `goal:"<dropdown>belongTo=auth.User.Username,sortable,globalSearch,filter"`
     Date time.Time `gorm:"index" goal:"<calendar>sortable,desc,filter,showTime"`
     IP string `goal:"<text>filter"`
-    Group string `goal:"<text>hidden"`
-    Item string `goal:"<text>hidden"`
-    Action string `goal:"<text>"`
+    Group string `goal:"<text>filter"`
+    Item string `goal:"<text>filter"`
+    Action string `goal:"<text>filter"`
     ObjectID uint `goal:"<number>uint"`
 }
 
