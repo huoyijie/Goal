@@ -156,42 +156,47 @@ func filters(model any, modelType reflect.Type, session *auth.Session, mine bool
 					}
 				}
 
-				if hasPrev {
-					sb.WriteString(" and ")
-				}
-
 				table, field := web.TableFieldName(db, model, modelType, k)
 
 				if value, ok := v["value"]; ok {
 					switch value := value.(type) {
 					case bool:
+						if hasPrev {
+							sb.WriteString(" and ")
+						}
 						var val int
 						if value {
 							val = 1
 						}
 						matchMode := v["matchMode"].(string)
 						web.FilterClause(&sb, table, field, matchMode, fmt.Sprintf("%d", val))
+						hasPrev = true
 					}
 				} else {
 					operator := v["operator"].(string)
 					constraints := v["constraints"].([]any)
-					sb.WriteString("( ")
-					var hasOp bool
-					for _, constraint := range constraints {
-						if hasOp {
-							sb.WriteRune(' ')
-							sb.WriteString(operator)
-							sb.WriteRune(' ')
+					if operator != "" && len(constraints) > 0 {
+						if hasPrev {
+							sb.WriteString(" and ")
 						}
-						c := constraint.(map[string]any)
-						value := fmt.Sprintf("%v", c["value"])
-						matchMode := c["matchMode"].(string)
-						web.FilterClause(&sb, table, field, matchMode, value)
-						hasOp = true
+						sb.WriteString("( ")
+						var hasOp bool
+						for _, constraint := range constraints {
+							if hasOp {
+								sb.WriteRune(' ')
+								sb.WriteString(operator)
+								sb.WriteRune(' ')
+							}
+							c := constraint.(map[string]any)
+							value := fmt.Sprintf("%v", c["value"])
+							matchMode := c["matchMode"].(string)
+							web.FilterClause(&sb, table, field, matchMode, value)
+							hasOp = true
+						}
+						sb.WriteString(" )")
+						hasPrev = true
 					}
-					sb.WriteString(" )")
 				}
-				hasPrev = true
 			}
 		}
 
