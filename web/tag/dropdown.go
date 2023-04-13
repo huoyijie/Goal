@@ -3,6 +3,7 @@ package tag
 // Object
 type Dropdown struct {
 	Base
+	BelongTo *BelongTo `json:",omitempty"`
 }
 
 // Head implements Component

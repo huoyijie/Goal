@@ -3,8 +3,8 @@ package tag
 // time.Time
 type Calendar struct {
 	Base
-	ShowTime `json:",omitempty"`
-	ShowIcon `json:",omitempty"`
+	ShowTime,
+	ShowIcon bool `json:",omitempty"`
 }
 
 // Head implements Component

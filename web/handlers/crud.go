@@ -137,8 +137,8 @@ func filters(model any, modelType reflect.Type, session *auth.Session, mine bool
 						base := c.Component.Tag.(tag.IBase).Get()
 						if base.GlobalSearch {
 							filterField := c.Name
-							if base.BelongTo != nil {
-								filterField = fmt.Sprintf("%s.%s", base.BelongTo.Name, base.BelongTo.Field)
+							if d, ok := c.Component.Tag.(*tag.Dropdown); ok && d.BelongTo != nil {
+								filterField = fmt.Sprintf("%s.%s", d.BelongTo.Name, d.BelongTo.Field)
 							}
 
 							if hasPrev {

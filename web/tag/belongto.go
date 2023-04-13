@@ -7,8 +7,8 @@ import (
 
 // relation
 type BelongTo struct {
-	Pkg   string `json:",omitempty"`
-	Name  string `json:",omitempty"`
+	Pkg,
+	Name,
 	Field string `json:",omitempty"`
 }
 

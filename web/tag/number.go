@@ -3,11 +3,11 @@ package tag
 // int | float
 type Number struct {
 	Base
-	ShowButtons `json:",omitempty"`
-	Float       `json:",omitempty"`
-	Uint        `json:",omitempty"`
-	Min         `json:",omitempty"`
-	Max         `json:",omitempty"`
+	ShowButtons,
+	Float,
+	Uint bool `json:",omitempty"`
+	Min,
+	Max *int `json:",omitempty"`
 }
 
 // Head implements Component

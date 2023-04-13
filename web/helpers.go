@@ -117,7 +117,7 @@ func Reflect(modelType reflect.Type) (secrets, preloads, columns []Column) {
 			secrets = append(secrets, column)
 		}
 
-		if component.(tag.IBase).Get().BelongTo != nil {
+		if d, ok := component.(*tag.Dropdown); ok && d.BelongTo != nil {
 			preloads = append(preloads, column)
 		}
 		columns = append(columns, column)

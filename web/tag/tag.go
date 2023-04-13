@@ -55,29 +55,40 @@ func ParseString(tag Tag, token string) (propVal string) {
 	return
 }
 
-// Parse property of int
-func ParseInt(tag Tag, token string) (propVal int) {
-	if propValStr := ParseString(tag, token); propValStr != "" {
-		fmt.Sscanf(propValStr, "%d", &propVal)
-	}
-	return
-}
-
 // recursive marshal
 func Marshal(tag Tag) (token string) {
 	var arr []string
-	elem := reflect.ValueOf(tag).Elem()
-	for i := 0; i < elem.NumField(); i++ {
-		f := elem.Field(i)
-		if f.Kind() != reflect.Pointer {
-			f = f.Addr()
-		}
-		if f.IsNil() {
-			continue
-		}
-		tag := f.Interface().(Tag)
-		if t := tag.Marshal(); t != "" {
-			arr = append(arr, t)
+	t := reflect.TypeOf(tag).Elem()
+	v := reflect.ValueOf(tag).Elem()
+loop:
+	for i := 0; i < t.NumField(); i++ {
+		f := t.Field(i)
+		fVal := v.FieldByName(f.Name)
+		switch fVal.Kind() {
+		case reflect.Bool:
+			if fVal.Bool() {
+				arr = append(arr, util.ToLowerFirstLetter(f.Name))
+			}
+		case reflect.Struct:
+			if f.Name == "Base" {
+				if tag := fVal.Addr().Interface().(Tag).Marshal(); tag != "" {
+					arr = append(arr, tag)
+				}
+			}
+		case reflect.Pointer:
+			if fVal.IsNil() {
+				continue loop
+			}
+			switch fVal.Elem().Kind() {
+			case reflect.Int:
+				arr = append(arr, fmt.Sprintf("%s=%d", util.ToLowerFirstLetter(f.Name), fVal.Elem().Int()))
+			case reflect.Struct:
+				if f.Name == "BelongTo" || f.Name == "UploadTo" {
+					if tag := fVal.Interface().(Tag).Marshal(); tag != "" {
+						arr = append(arr, tag)
+					}
+				}
+			}
 		}
 	}
 	if c, ok := tag.(Component); ok {
@@ -94,19 +105,42 @@ func Unmarshal(token string, tag Tag) {
 			token, _ = strings.CutPrefix(token, c.Head())
 		}
 
-		elem := reflect.ValueOf(tag).Elem()
-		for i := 0; i < elem.NumField(); i++ {
-			f := elem.Field(i)
-			if f.Kind() != reflect.Pointer {
-				f = f.Addr()
-			}
-			tag := f.Interface().(Tag)
-			if tag.Match(token) {
-				if f.IsNil() {
-					f.Set(reflect.New(reflect.TypeOf(f.Interface()).Elem()))
-					tag = f.Interface().(Tag)
+		t := reflect.TypeOf(tag).Elem()
+		v := reflect.ValueOf(tag).Elem()
+	loop:
+		for i := 0; i < t.NumField(); i++ {
+			f := t.Field(i)
+			fVal := v.FieldByName(f.Name)
+			switch fVal.Kind() {
+			case reflect.Bool:
+				if strings.Contains(token, util.ToLowerFirstLetter(f.Name)) {
+					fVal.SetBool(true)
 				}
-				tag.Unmarshal(token)
+			case reflect.Struct:
+				if f.Name == "Base" {
+					fVal.Addr().Interface().(Tag).Unmarshal(token)
+				}
+			case reflect.Pointer:
+				if prefix := fmt.Sprintf("%s=", util.ToLowerFirstLetter(f.Name)); strings.Contains(token, prefix) {
+					if fVal.IsNil() {
+						fVal.Set(reflect.New(f.Type.Elem()))
+					}
+					switch fVal.Elem().Kind() {
+					case reflect.Int:
+						for _, v := range strings.Split(token, ",") {
+							if t, found := strings.CutPrefix(v, prefix); found {
+								if t != "" {
+									fmt.Sscanf(t, "%d", fVal.Interface())
+								}
+								continue loop
+							}
+						}
+					case reflect.Struct:
+						if f.Name == "BelongTo" || f.Name == "UploadTo" {
+							fVal.Interface().(Tag).Unmarshal(token)
+						}
+					}
+				}
 			}
 		}
 	}
