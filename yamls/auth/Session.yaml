@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=https://cdn.huoyijie.cn/uploads/2023/04/goal-schema-v0.0.16.json
+# yaml-language-server: $schema=https://cdn.huoyijie.cn/uploads/2023/04/goal-schema-v0.0.17.json
 package: auth
 name: Session
 database:
@@ -10,36 +10,42 @@ fields:
     database:
       unique: true
     view:
-      name: uuid
-      readonly: true
-      globalsearch: true
-      filter: true
+      uuid: true
+      base:
+        readonly: true
+        globalsearch: true
+        filter: true
     validator:
       required: true
       alphanum: true
       len: 32
   - name: UserID
     view:
-      name: number
-      uint: true
-      autowired: true
+      number:
+        uint: true
+      base:
+        autowired: true
   - name: User
     view:
-      name: dropdown
-      belongto: User.Username
-      postonly: true
-      filter: true
+      dropdown:
+        belongto:
+          name: User
+          field: Username
+      base:
+        postonly: true
+        filter: true
     validator:
       required: true
   - name: ExpireDate
     database:
       index: true
     view:
-      name: calendar
-      showtime: true
-      showicon: true
-      sortable: true
-      desc: true
-      filter: true
+      calendar:
+        showtime: true
+        showicon: true
+      base:
+        sortable: true
+        desc: true
+        filter: true
     validator:
       required: true

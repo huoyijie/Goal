@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=https://cdn.huoyijie.cn/uploads/2023/04/goal-schema-v0.0.16.json
+# yaml-language-server: $schema=https://cdn.huoyijie.cn/uploads/2023/04/goal-schema-v0.0.17.json
 package: admin
 name: OperationLog
 database:
@@ -10,42 +10,52 @@ fields:
     database:
       index: true
     view:
-      name: number
-      uint: true
-      hidden: true
+      number:
+        uint: true
+      base:
+        hidden: true
   - name: User
     view:
-      name: dropdown
-      belongto: auth.User.Username
-      sortable: true
-      globalsearch: true
-      filter: true
+      dropdown:
+        belongto:
+          pkg: auth
+          name: User
+          field: Username
+      base:
+        sortable: true
+        globalsearch: true
+        filter: true
   - name: Date
     database:
       index: true
     view:
-      name: calendar
-      showtime: true
-      sortable: true
-      desc: true
-      filter: true
+      calendar:
+        showtime: true
+      base:
+        sortable: true
+        desc: true
+        filter: true
   - name: IP
     view:
-      name: text
-      filter: true
+      text: true
+      base:
+        filter: true
   - name: Group
     view:
-      name: text
-      filter: true
+      text: true
+      base:
+        filter: true
   - name: Item
     view:
-      name: text
-      filter: true
+      text: true
+      base:
+        filter: true
   - name: Action
     view:
-      name: text
-      filter: true
+      text: true
+      base:
+        filter: true
   - name: ObjectID
     view:
-      name: number
-      uint: true
+      number:
+        uint: true

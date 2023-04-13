@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=https://cdn.huoyijie.cn/uploads/2023/04/goal-schema-v0.0.16.json
+# yaml-language-server: $schema=https://cdn.huoyijie.cn/uploads/2023/04/goal-schema-v0.0.17.json
 package: cdn
 name: Resource
 database:
@@ -10,10 +10,11 @@ fields:
     database:
       unique: true
     view:
-      name: file
-      uploadto: uploads
-      postonly: true
-      globalsearch: true
-      filter: true
+      file:
+        uploadto: uploads
+      base:
+        postonly: true
+        globalsearch: true
+        filter: true
     validator:
       required: true

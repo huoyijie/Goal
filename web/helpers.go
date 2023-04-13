@@ -14,7 +14,7 @@ import (
 	"github.com/huoyijie/Goal/auth"
 	"github.com/huoyijie/Goal/util"
 	"github.com/huoyijie/Goal/web/tag"
-	goalgenerator "github.com/huoyijie/GoalGenerator"
+	"github.com/huoyijie/GoalGenerator/model"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 )
@@ -215,8 +215,8 @@ func SecureRecord(secrets []Column, recordVal reflect.Value) {
 	}
 }
 
-func IsLazy(model any) bool {
-	return reflect.TypeOf(model).Implements(reflect.TypeOf((*goalgenerator.Lazy)(nil)).Elem())
+func IsLazy(m any) bool {
+	return reflect.TypeOf(m).Implements(reflect.TypeOf((*model.Lazy)(nil)).Elem())
 }
 
 func IsTabler(t reflect.Type) bool {

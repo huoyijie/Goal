@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=https://cdn.huoyijie.cn/uploads/2023/04/goal-schema-v0.0.16.json
+# yaml-language-server: $schema=https://cdn.huoyijie.cn/uploads/2023/04/goal-schema-v0.0.17.json
 package: auth
 name: Role
 database:
@@ -8,10 +8,11 @@ fields:
     database:
       unique: true
     view:
-      name: text
-      sortable: true
-      globalsearch: true
-      filter: true
+      text: true
+      base:
+        sortable: true
+        globalsearch: true
+        filter: true
     validator:
       required: true
       alphanum: true
