@@ -358,7 +358,7 @@ func CrudExist(db *gorm.DB) gin.HandlerFunc {
 
 		dbRecord := reflect.New(modelType).Interface()
 		// todo refactor hardcode by `ID`
-		err := db.Select("ID").Where(record).First(dbRecord).Error
+		err := db.Unscoped().Select("ID").Where(record).First(dbRecord).Error
 		if err == nil {
 			c.JSON(http.StatusOK, web.Result{Data: dbRecord})
 			return
