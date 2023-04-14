@@ -51,6 +51,7 @@ func NewGoal(db *gorm.DB, models ...any) Goal {
 		enforcer: enforcer,
 		models:   m,
 	}
+	admin.AddItems(goal.getModels())
 	return goal
 }
 
