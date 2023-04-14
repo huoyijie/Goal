@@ -178,6 +178,21 @@ func filters(model any, modelType reflect.Type, session *auth.Session, mine bool
 						matchMode := v["matchMode"].(string)
 						web.FilterClause(&sb, table, field, matchMode, value)
 						hasPrev = true
+					case int, uint:
+						if hasPrev {
+							sb.WriteString(" and ")
+						}
+						matchMode := v["matchMode"].(string)
+						web.FilterClause(&sb, table, field, matchMode, fmt.Sprintf("%d", value))
+						hasPrev = true
+					case float64:
+						// todo float64 eqauls maybe wrong sometimes
+						if hasPrev {
+							sb.WriteString(" and ")
+						}
+						matchMode := v["matchMode"].(string)
+						web.FilterClause(&sb, table, field, matchMode, strconv.FormatFloat(value, 'f', -1, 64))
+						hasPrev = true
 					}
 				} else {
 					operator := v["operator"].(string)
