@@ -97,3 +97,8 @@ type LazyParam struct {
 	SortOrder int    `form:"sortOrder"`
 	Filters   string `form:"filters"`
 }
+
+type Option struct {
+	Label string `json:"label"`
+	Value any `json:"value"`
+}

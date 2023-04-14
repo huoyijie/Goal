@@ -171,6 +171,13 @@ func filters(model any, modelType reflect.Type, session *auth.Session, mine bool
 						matchMode := v["matchMode"].(string)
 						web.FilterClause(&sb, table, field, matchMode, fmt.Sprintf("%d", val))
 						hasPrev = true
+					case string:
+						if hasPrev {
+							sb.WriteString(" and ")
+						}
+						matchMode := v["matchMode"].(string)
+						web.FilterClause(&sb, table, field, matchMode, value)
+						hasPrev = true
 					}
 				} else {
 					operator := v["operator"].(string)
@@ -395,5 +402,54 @@ func Upload(db *gorm.DB) gin.HandlerFunc {
 		c.SaveUploadedFile(file, filePath)
 
 		c.JSON(http.StatusOK, web.Result{Data: filePath})
+	}
+}
+
+func Select(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		model, _ := c.Get("model")
+		mt, _ := c.Get("modelType")
+		modelType := mt.(reflect.Type)
+
+		field, _ := c.Params.Get("field")
+		f, _ := modelType.FieldByName(field)
+		t := web.GetComponent(f)
+		d := t.(*tag.Dropdown)
+		var m string
+		switch {
+		case d.Strings:
+			m = fmt.Sprintf("%sStrings", field)
+		case d.DynamicStrings:
+			m = fmt.Sprintf("%sDynamicStrings", field)
+		case d.Ints:
+			m = fmt.Sprintf("%sInts", field)
+		case d.DynamicInts:
+			m = fmt.Sprintf("%sDynamicInts", field)
+		case d.Uints:
+			m = fmt.Sprintf("%sUints", field)
+		case d.DynamicUints:
+			m = fmt.Sprintf("%sDynamicUints", field)
+		case d.Floats:
+			m = fmt.Sprintf("%sFloats", field)
+		case d.DynamicFloats:
+			m = fmt.Sprintf("%sDynamicFloats", field)
+		}
+
+		getOptions := reflect.ValueOf(model).MethodByName(m)
+		if !getOptions.IsValid() {
+			c.AbortWithStatus(http.StatusInternalServerError)
+			return
+		}
+
+		var data []web.Option
+		out := getOptions.Call([]reflect.Value{})
+		for i := 0; i < out[0].Len(); i++ {
+			o := out[0].Index(i).Interface()
+			data = append(data, web.Option{
+				Label: fmt.Sprintf("%v", o),
+				Value: o,
+			})
+		}
+		c.JSON(http.StatusOK, web.Result{Data: data})
 	}
 }

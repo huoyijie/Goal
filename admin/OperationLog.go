@@ -15,12 +15,23 @@ type OperationLog struct {
     User auth.User `goal:"<dropdown>sortable,globalSearch,filter,belongTo=auth.User.Username"`
     Date time.Time `gorm:"index" goal:"<calendar>sortable,desc,filter,showTime"`
     IP string `goal:"<text>filter"`
-    Group string `goal:"<text>filter"`
-    Item string `goal:"<text>filter"`
-    Action string `goal:"<text>filter"`
+    Group string `goal:"<dropdown>filter,dynamicStrings"`
+    Item string `goal:"<dropdown>filter,dynamicStrings"`
+    Action string `goal:"<dropdown>filter,strings"`
     ObjectID uint `goal:"<number>uint"`
 }
 
+// Please implements this method in another file
+// func (*OperationLog) GroupDynamicStrings() []string {
+//     return []string{"some", "custom", "strings"}
+// }
+// Please implements this method in another file
+// func (*OperationLog) ItemDynamicStrings() []string {
+//     return []string{"some", "custom", "strings"}
+// }
+func (*OperationLog) ActionStrings() []string {
+    return []string{"post", "put", "delete"}
+}
 
 func (*OperationLog) Lazy() {}
 var _ model.Lazy = (*OperationLog)(nil)

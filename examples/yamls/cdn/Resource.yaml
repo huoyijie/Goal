@@ -18,3 +18,14 @@ fields:
         filter: true
     validator:
       required: true
+  - name: Status
+    view:
+     dropdown:
+       strings:
+         - "tbd"
+         - "on"
+         - "off"
+     base:
+      filter: true
+    validator:
+      required: true

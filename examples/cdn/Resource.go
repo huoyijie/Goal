@@ -10,8 +10,12 @@ type Resource struct {
     model.Base
 
     File string `gorm:"unique" binding:"required" goal:"<file>unique,postonly,globalSearch,filter,uploadTo=uploads"`
+    Status string `binding:"required" goal:"<dropdown>filter,strings"`
 }
 
+func (*Resource) StatusStrings() []string {
+    return []string{"tbd", "on", "off"}
+}
 
 func (*Resource) Lazy() {}
 var _ model.Lazy = (*Resource)(nil)

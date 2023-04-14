@@ -42,17 +42,23 @@ fields:
         filter: true
   - name: Group
     view:
-      text: true
+      dropdown:
+        dynamicstrings: true
       base:
         filter: true
   - name: Item
     view:
-      text: true
+      dropdown:
+        dynamicstrings: true
       base:
         filter: true
   - name: Action
     view:
-      text: true
+      dropdown:
+        strings:
+          - "post"
+          - "put"
+          - "delete"
       base:
         filter: true
   - name: ObjectID

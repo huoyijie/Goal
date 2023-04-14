@@ -3,6 +3,14 @@ package tag
 // Object
 type Dropdown struct {
 	Base
+	Strings,
+	Ints,
+	Uints,
+	Floats,
+	DynamicStrings,
+	DynamicInts,
+	DynamicUints,
+	DynamicFloats bool `json:",omitempty"`
 	BelongTo *BelongTo `json:",omitempty"`
 }
 
