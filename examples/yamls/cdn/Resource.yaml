@@ -20,12 +20,23 @@ fields:
       required: true
   - name: Status
     view:
-     dropdown:
-       strings:
-         - "tbd"
-         - "on"
-         - "off"
-     base:
-      filter: true
+      dropdown:
+        strings:
+          - "tbd"
+          - "on"
+          - "off"
+      base:
+        filter: true
+    validator:
+      required: true
+  - name: Level
+    view:
+      dropdown:
+        uints:
+          - 1
+          - 2
+          - 3
+      base:
+        filter: true
     validator:
       required: true

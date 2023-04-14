@@ -113,8 +113,12 @@ func Unmarshal(token string, tag Tag) {
 			fVal := v.FieldByName(f.Name)
 			switch fVal.Kind() {
 			case reflect.Bool:
-				if strings.Contains(token, util.ToLowerFirstLetter(f.Name)) {
-					fVal.SetBool(true)
+				fn := util.ToLowerFirstLetter(f.Name)
+				for _, s := range strings.Split(token, ",") {
+					if s == fn {
+						fVal.SetBool(true)
+						break
+					}
 				}
 			case reflect.Struct:
 				if f.Name == "Base" {
