@@ -9,22 +9,8 @@ import (
 
 var items []any
 
-func group(model any) string {
-	t := reflect.TypeOf(model).Elem()
-	return strings.ToLower(filepath.Base(t.PkgPath()))
-}
-
-func item(model any) string {
-	t := reflect.TypeOf(model).Elem()
-	return strings.ToLower(t.Name())
-}
-
 func AddItems(models []any) {
 	items = models
-}
-
-func (OperationLog) TableName() string {
-	return "admin_operation_logs"
 }
 
 func (*OperationLog) GroupDynamicStrings() (strings []string) {
@@ -46,4 +32,14 @@ func (*OperationLog) ItemDynamicStrings() (strings []string) {
 		strings = append(strings, fmt.Sprintf("%s.%s", group(i), item(i)))
 	}
 	return
+}
+
+func group(model any) string {
+	t := reflect.TypeOf(model).Elem()
+	return strings.ToLower(filepath.Base(t.PkgPath()))
+}
+
+func item(model any) string {
+	t := reflect.TypeOf(model).Elem()
+	return strings.ToLower(t.Name())
 }

@@ -1,8 +1,10 @@
-# yaml-language-server: $schema=https://cdn.huoyijie.cn/uploads/2023/04/goal-schema-v0.0.17.json
+# yaml-language-server: $schema=https://cdn.huoyijie.cn/uploads/2023/04/goal-schema-v0.0.18.json
 package: auth
 name: Session
 database:
   embeddingbase: true
+  purge: true
+  tablename: auth_sessions
 view:
   lazy: true
 fields:
