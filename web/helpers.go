@@ -219,6 +219,10 @@ func IsLazy(m any) bool {
 	return reflect.TypeOf(m).Implements(reflect.TypeOf((*model.Lazy)(nil)).Elem())
 }
 
+func IsPurge(m any) bool {
+	return reflect.TypeOf(m).Implements(reflect.TypeOf((*model.Purge)(nil)).Elem())
+}
+
 func IsTabler(t reflect.Type) bool {
 	return t.Implements(reflect.TypeOf((*schema.Tabler)(nil)).Elem())
 }

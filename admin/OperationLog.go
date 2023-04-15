@@ -36,8 +36,6 @@ func (*OperationLog) ActionStrings() []string {
     return []string{"post", "put", "delete"}
 }
 
-func (*OperationLog) Purge() {}
-
 func (*OperationLog) Lazy() {}
 
 func (*OperationLog) Ctrl() {}

@@ -20,6 +20,16 @@ import (
 	"gorm.io/gorm"
 )
 
+func purge(record any) func(*gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) (tx *gorm.DB) {
+		tx = db
+		if web.IsPurge(record) {
+			tx = tx.Unscoped()
+		}
+		return
+	}
+}
+
 func crud(c *gin.Context, action string, db *gorm.DB, enforcer *casbin.Enforcer) {
 	mt, _ := c.Get("modelType")
 	modelType := mt.(reflect.Type)
@@ -55,7 +65,7 @@ func crud(c *gin.Context, action string, db *gorm.DB, enforcer *casbin.Enforcer)
 		case *auth.User:
 			enforcer.DeleteRolesForUser(r.Sub())
 		}
-		tx = db.Delete(record)
+		tx = db.Scopes(purge(record)).Delete(record)
 	}
 
 	if err := tx.Error; err != nil {
@@ -359,7 +369,7 @@ func CrudBatchDelete(db *gorm.DB, enforcer *casbin.Enforcer) gin.HandlerFunc {
 			}
 		}
 
-		if err := db.Delete(model, ids).Error; err != nil {
+		if err := db.Scopes(purge(model)).Delete(model, ids).Error; err != nil {
 			c.AbortWithStatus(http.StatusInternalServerError)
 			return
 		}

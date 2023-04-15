@@ -3,7 +3,6 @@ package: admin
 name: OperationLog
 database:
   embeddingbase: true
-  purge: true
   tablename: admin_operation_logs
 view:
   lazy: true
