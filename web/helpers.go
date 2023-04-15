@@ -215,6 +215,12 @@ func SecureRecord(secrets []Column, recordVal reflect.Value) {
 	}
 }
 
+func Icon(model any) string {
+	m := reflect.ValueOf(model).MethodByName("Icon")
+	out := m.Call([]reflect.Value{})
+	return out[0].String()
+}
+
 func IsLazy(m any) bool {
 	return reflect.TypeOf(m).Implements(reflect.TypeOf((*model.Lazy)(nil)).Elem())
 }

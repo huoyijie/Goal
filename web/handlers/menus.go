@@ -19,12 +19,12 @@ func Menus(models []any, enforcer *casbin.Enforcer) gin.HandlerFunc {
 				for i := range menus {
 					if menus[i].Name == group {
 						found = true
-						menus[i].Items = append(menus[i].Items, web.Menu{Name: web.Item(m), Items: nil})
+						menus[i].Items = append(menus[i].Items, web.Menu{Name: web.Item(m), Icon: web.Icon(m)})
 						break
 					}
 				}
 				if !found {
-					menus = append(menus, web.Menu{Name: group, Items: []web.Menu{{Name: web.Item(m), Items: nil}}})
+					menus = append(menus, web.Menu{Name: group, Items: []web.Menu{{Name: web.Item(m), Icon: web.Icon(m)}}})
 				}
 			}
 		}

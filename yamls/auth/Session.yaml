@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=https://cdn.huoyijie.cn/uploads/2023/04/goal-schema-v0.0.18.json
+# yaml-language-server: $schema=https://cdn.huoyijie.cn/uploads/2023/04/goal-schema-v0.0.20.json
 package: auth
 name: Session
 database:
@@ -7,6 +7,7 @@ database:
   tablename: auth_sessions
 view:
   lazy: true
+  icon: ticket
 fields:
   - name: Key
     database:

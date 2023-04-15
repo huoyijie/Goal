@@ -59,7 +59,8 @@ type RecordList struct {
 
 type Menu struct {
 	Name  string `json:"label"`
-	Items []Menu `json:"items"`
+	Icon  string `json:"icon,omitempty"`
+	Items []Menu `json:"items,omitempty"`
 }
 
 type Perm struct {

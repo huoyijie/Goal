@@ -1,10 +1,12 @@
-# yaml-language-server: $schema=https://cdn.huoyijie.cn/uploads/2023/04/goal-schema-v0.0.18.json
+# yaml-language-server: $schema=https://cdn.huoyijie.cn/uploads/2023/04/goal-schema-v0.0.20.json
 package: auth
 name: Role
 database:
   embeddingbase: true
   purge: true
   tablename: auth_roles
+view:
+  icon: key
 fields:
   - name: Name
     database:
