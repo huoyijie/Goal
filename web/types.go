@@ -47,6 +47,7 @@ type Perms struct {
 
 type DataTable struct {
 	Lazy    bool     `json:"lazy"`
+	Ctrl    bool     `json:"ctrl"`
 	Columns []Column `json:"columns"`
 	Perms   *Perms   `json:"perms"`
 }
@@ -100,5 +101,5 @@ type LazyParam struct {
 
 type Option struct {
 	Label string `json:"label"`
-	Value any `json:"value"`
+	Value any    `json:"value"`
 }

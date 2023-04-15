@@ -219,6 +219,10 @@ func IsLazy(m any) bool {
 	return reflect.TypeOf(m).Implements(reflect.TypeOf((*model.Lazy)(nil)).Elem())
 }
 
+func IsCtrl(m any) bool {
+	return reflect.TypeOf(m).Implements(reflect.TypeOf((*model.Ctrl)(nil)).Elem())
+}
+
 func IsPurge(m any) bool {
 	return reflect.TypeOf(m).Implements(reflect.TypeOf((*model.Purge)(nil)).Elem())
 }

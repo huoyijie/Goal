@@ -307,6 +307,7 @@ func CrudDataTable(enforcer *casbin.Enforcer) gin.HandlerFunc {
 
 		c.JSON(http.StatusOK, web.Result{Data: web.DataTable{
 			Lazy:    web.IsLazy(model),
+			Ctrl:    web.IsCtrl(model),
 			Columns: columns,
 			Perms:   perms,
 		}})
