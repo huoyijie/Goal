@@ -1,6 +1,12 @@
-# yaml-language-server: $schema=https://cdn.huoyijie.cn/uploads/2023/04/goal-schema-v0.0.20.json
-package: auth
-name: Session
+# yaml-language-server: $schema=/home/huoyijie/gowork/GoalGenerator/schema.json
+package:
+  value: auth
+  en: Auth
+  zh_CN: 认证授权
+name:
+  value: Session
+  en: Session | sessions
+  zh_CN: 会话
 database:
   embeddingbase: true
   purge: true
@@ -9,7 +15,10 @@ view:
   lazy: true
   icon: ticket
 fields:
-  - name: Key
+  - name:
+      value: Key
+      en: Key
+      zh_CN: 会话
     database:
       unique: true
     view:
@@ -22,13 +31,19 @@ fields:
       required: true
       alphanum: true
       len: 32
-  - name: UserID
+  - name:
+      value: UserID
+      en: User ID
+      zh_CN: 用户ID
     view:
       number:
         uint: true
       base:
         autowired: true
-  - name: User
+  - name:
+      value: User
+      en: User
+      zh_CN: 用户
     view:
       dropdown:
         belongto:
@@ -39,7 +54,10 @@ fields:
         filter: true
     validator:
       required: true
-  - name: ExpireDate
+  - name:
+      value: ExpireDate
+      en: Expire Date
+      zh_CN: 过期时间
     database:
       index: true
     view:

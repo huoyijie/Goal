@@ -1,6 +1,12 @@
-# yaml-language-server: $schema=https://cdn.huoyijie.cn/uploads/2023/04/goal-schema-v0.0.20.json
-package: admin
-name: OperationLog
+# yaml-language-server: $schema=/home/huoyijie/gowork/GoalGenerator/schema.json
+package:
+  value: admin
+  en: Admin
+  zh_CN: 通用管理
+name:
+  value: OperationLog
+  en: Operation Log | operation logs
+  zh_CN: 操作日志
 database:
   embeddingbase: true
   tablename: admin_operation_logs
@@ -9,7 +15,10 @@ view:
   lazy: true
   ctrl: true
 fields:
-  - name: UserID
+  - name:
+      value: UserID
+      en: User ID
+      zh_CN: 用户ID
     database:
       index: true
     view:
@@ -17,7 +26,10 @@ fields:
         uint: true
       base:
         hidden: true
-  - name: User
+  - name:
+      value: User
+      en: User
+      zh_CN: 用户
     view:
       dropdown:
         belongto:
@@ -28,7 +40,10 @@ fields:
         sortable: true
         globalsearch: true
         filter: true
-  - name: Date
+  - name:
+      value: Date
+      en: Date
+      zh_CN: 时间
     database:
       index: true
     view:
@@ -38,24 +53,36 @@ fields:
         sortable: true
         desc: true
         filter: true
-  - name: IP
+  - name:
+      value: IP
+      en: IP
+      zh_CN: IP
     view:
       text: true
       base:
         filter: true
-  - name: Group
+  - name:
+      value: Group
+      en: Group
+      zh_CN: 组
     view:
       dropdown:
         dynamicstrings: true
       base:
         filter: true
-  - name: Item
+  - name:
+      value: Item
+      en: Item
+      zh_CN: 项
     view:
       dropdown:
         dynamicstrings: true
       base:
         filter: true
-  - name: Action
+  - name:
+      value: Action
+      en: Action
+      zh_CN: 动作
     view:
       dropdown:
         strings:
@@ -64,7 +91,10 @@ fields:
           - "delete"
       base:
         filter: true
-  - name: ObjectID
+  - name:
+      value: ObjectID
+      en: Object ID
+      zh_CN: 目标ID
     view:
       number:
         uint: true

@@ -1,6 +1,12 @@
-# yaml-language-server: $schema=https://cdn.huoyijie.cn/uploads/2023/04/goal-schema-v0.0.20.json
-package: auth
-name: Role
+# yaml-language-server: $schema=/home/huoyijie/gowork/GoalGenerator/schema.json
+package:
+  value: auth
+  en: Auth
+  zh_CN: 认证授权
+name:
+  value: Role
+  en: Role | roles
+  zh_CN: 角色
 database:
   embeddingbase: true
   purge: true
@@ -8,7 +14,10 @@ database:
 view:
   icon: key
 fields:
-  - name: Name
+  - name:
+      value: Name
+      en: Name
+      zh_CN: 名称
     database:
       unique: true
     view:

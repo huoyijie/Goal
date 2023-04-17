@@ -80,7 +80,7 @@ func (gw *goal_web_t) Router() *gin.Engine {
 	anonymousGroup.POST("signin", handlers.Signin(gw.db))
 	// `/admin/signout`
 	anonymousGroup.GET("signout", handlers.Signout(gw.db))
-	anonymousGroup.GET("locale", handlers.Translate)
+	anonymousGroup.GET("locale", handlers.Translate(gw.getModels()))
 
 	signinRequiredGroup := adminGroup.Group("", middlewares.SigninRequired)
 	// `/admin/menus`

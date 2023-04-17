@@ -1,6 +1,12 @@
-# yaml-language-server: $schema=https://cdn.huoyijie.cn/uploads/2023/04/goal-schema-v0.0.20.json
-package: auth
-name: User
+# yaml-language-server: $schema=/home/huoyijie/gowork/GoalGenerator/schema.json
+package:
+  value: auth
+  en: Auth
+  zh_CN: 认证授权
+name:
+  value: User
+  en: User | users
+  zh_CN: 用户
 database:
   embeddingbase: true
   tablename: auth_users
@@ -8,7 +14,10 @@ view:
   lazy: true
   icon: users
 fields:
-  - name: Username
+  - name:
+      value: Username
+      en: Username
+      zh_CN: 用户名
     database:
       unique: true
     view:
@@ -22,7 +31,10 @@ fields:
       alphanum: true
       min: 3
       max: 40
-  - name: Email
+  - name:
+      value: Email
+      en: Email
+      zh_CN: 邮件地址
     database:
       unique: true
     view:
@@ -33,7 +45,10 @@ fields:
     validator:
       required: true
       email: true
-  - name: Password
+  - name:
+      value: Password
+      en: Password
+      zh_CN: 密码
     view:
       password: true
       base:
@@ -42,13 +57,19 @@ fields:
     validator:
       required: true
       min: 8
-  - name: IsSuperuser
+  - name:
+      value: IsSuperuser
+      en: Super User
+      zh_CN: 超级管理员
     view:
       switch: true
       base:
         readonly: true
         filter: true
-  - name: IsActive
+  - name:
+      value: IsActive
+      en: Active
+      zh_CN: 有效
     view:
       switch: true
       base:

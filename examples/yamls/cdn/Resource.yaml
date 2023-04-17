@@ -1,6 +1,12 @@
-# yaml-language-server: $schema=https://cdn.huoyijie.cn/uploads/2023/04/goal-schema-v0.0.20.json
-package: cdn
-name: Resource
+# yaml-language-server: $schema=/home/huoyijie/gowork/GoalGenerator/schema.json
+package:
+  value: cdn
+  en: CDN
+  zh_CN: CDN
+name:
+  value: Resource
+  en: Resource | resources
+  zh_CN: 资源
 database:
   embeddingbase: true
   purge: true
@@ -8,7 +14,10 @@ view:
   icon: cloud-upload
   lazy: true
 fields:
-  - name: File
+  - name:
+      value: File
+      en: File
+      zh_CN: 文件
     database:
       unique: true
     view:
@@ -20,7 +29,10 @@ fields:
         filter: true
     validator:
       required: true
-  - name: Status
+  - name:
+      value: Status
+      en: Status
+      zh_CN: 状态
     view:
       dropdown:
         strings:
@@ -31,7 +43,10 @@ fields:
         filter: true
     validator:
       required: true
-  - name: Level
+  - name:
+      value: Level
+      en: Level
+      zh_CN: 等级
     view:
       dropdown:
         uints:
