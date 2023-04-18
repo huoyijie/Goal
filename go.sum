@@ -80,8 +80,8 @@ github.com/google/renameio v0.1.0/go.mod h1:KWCgfxg9yswjAJkECMjeO8J8rahYeXnNhOm4
 github.com/google/uuid v1.1.1/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/google/uuid v1.3.0 h1:t6JiXgmwXMjEs8VusXIJk2BXHsn+wx8BZdTaoZ5fu7I=
 github.com/google/uuid v1.3.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
-github.com/huoyijie/GoalGenerator v0.0.27 h1:tL4HtDcK70CdEsLLweBzyR/g2LbICbO/zsuuEzsAVn4=
-github.com/huoyijie/GoalGenerator v0.0.27/go.mod h1:kI2tD5BsstXh98Xr+DxwUFTMG9ow/ICKHayA97rPa9E=
+github.com/huoyijie/GoalGenerator v0.0.28 h1:q1oq7BroxQDSysilnmYMKFxoTlZteDXIbZ9Zwf5aAsY=
+github.com/huoyijie/GoalGenerator v0.0.28/go.mod h1:kI2tD5BsstXh98Xr+DxwUFTMG9ow/ICKHayA97rPa9E=
 github.com/jackc/chunkreader v1.0.0/go.mod h1:RT6O25fNZIuasFJRyZ4R/Y2BbhasbmZXF9QQ7T3kePo=
 github.com/jackc/chunkreader/v2 v2.0.0/go.mod h1:odVSm741yZoC3dpHEUXIqA9tQRhFrgOHwnPIn9lDKlk=
 github.com/jackc/chunkreader/v2 v2.0.1 h1:i+RDz65UE+mmpjTfyz0MoVTnzeYxroil2G82ki7MGG8=
