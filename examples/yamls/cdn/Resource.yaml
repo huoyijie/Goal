@@ -35,10 +35,17 @@ fields:
       zh_CN: 状态
     view:
       dropdown:
-        strings:
-          - "tbd"
-          - "on"
-          - "off"
+        option:
+          strings:
+            - value: "tbd"
+              en: "TBD"
+              zh_CN: "待审核"
+            - value: "on"
+              en: "ON"
+              zh_CN: "上线"
+            - value: "off"
+              en: "OFF"
+              zh_CN: "下线"
       base:
         filter: true
     validator:
@@ -49,10 +56,17 @@ fields:
       zh_CN: 等级
     view:
       dropdown:
-        uints:
-          - 1
-          - 2
-          - 3
+        option:
+          uints:
+          - value: 1
+            en: "one"
+            zh_CN: "一"
+          - value: 2
+            en: "two"
+            zh_CN: "二"
+          - value: 3
+            en: "three"
+            zh_CN: "三"
       base:
         filter: true
     validator:

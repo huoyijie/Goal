@@ -67,7 +67,9 @@ fields:
       zh_CN: 组
     view:
       dropdown:
-        dynamicstrings: true
+        option:
+          dynamic:
+            strings: true
       base:
         filter: true
   - name:
@@ -76,7 +78,9 @@ fields:
       zh_CN: 项
     view:
       dropdown:
-        dynamicstrings: true
+        option:
+          dynamic:
+            strings: true
       base:
         filter: true
   - name:
@@ -85,10 +89,17 @@ fields:
       zh_CN: 动作
     view:
       dropdown:
-        strings:
-          - "post"
-          - "put"
-          - "delete"
+        option:
+          strings:
+            - value: "post"
+              en: "Add"
+              zh_CN: "新增"
+            - value: "put"
+              en: "Change"
+              zh_CN: "修改"
+            - value: "delete"
+              en: "Delete"
+              zh_CN: "删除"
       base:
         filter: true
   - name:

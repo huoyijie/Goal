@@ -18,6 +18,7 @@ func Translate(models []any) gin.HandlerFunc {
 			tPkg := translate.TranslatePkg()
 			tName := translate.TranslateName()
 			tFields := translate.TranslateFields()
+			tOptions := translate.TranslateOptions()
 
 			pkg := web.Group(m)
 			item := web.Item(m)
@@ -31,8 +32,9 @@ func Translate(models []any) gin.HandlerFunc {
 					}
 				}
 				t[lang].(gin.H)[pkg].(gin.H)[item] = gin.H{
-					"label":  tName[lang],
-					"fields": tFields[lang],
+					"label":   tName[lang],
+					"fields":  tFields[lang],
+					"options": tOptions[lang],
 				}
 			}
 		}
