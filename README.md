@@ -1,30 +1,60 @@
 # Goal
 [Goal](https://github.com/huoyijie/Goal) is a lightweight web framework like Django written in Golang.
 
+[GoalGenerator](https://github.com/huoyijie/GoalGenerator) can auto-generate golang models from yaml file.
+
 [GoalUI](https://github.com/huoyijie/GoalUI) is front of Goal.
 
-[GoalGenerator](https://github.com/huoyijie/GoalGenerator) can auto-generate golang models from yaml file. 
+## Install Goal
 
-## Package Auth
+* Go 1.20+
 
-* User
-* Role
+* Repository
 
-## ORM
+```bash
+$ git clone git@github.com:huoyijie/Goal.git
+```
 
-## Authentication
+* Tidy
 
-## Authorization
+```bash
+$ cd Goal
+$ go mod tidy
+```
 
-## I18n/locale
+## Run example
 
-* translation
-* time zone
-* date/time/number format
+* Create Superuser
 
-## Backend
+```bash
+$ cd Goal
+$ go run ./goalcli -email huoyijie@huoyijie.cn -username huoyijie
+```
 
-Regex
+* Default Database (sqlite)
 
-## Frontend
+```bash
+$ ls -l ~/.goal/goal.db
+```
 
+* Run example `goal-web`
+
+```bash
+$ cd Goal/examples
+$ go run goal-web.go
+```
+
+## Install GoalGenerator
+
+* Repository
+
+```bash
+$ go install github.com/huoyijie/GoalGenerator/goalgen@v0.0.29
+```
+
+* Generate models from yaml files
+
+```bash
+$ cd Goal
+$ goalgen -d yamls
+```
