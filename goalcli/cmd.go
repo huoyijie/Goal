@@ -65,5 +65,5 @@ func main() {
 		IsActive:    true,
 	}
 
-	goal.New(util.OpenSqliteDB()).CreateSuper(super)
+	goal.New(goal.Config{}, util.OpenSqliteDB()).CreateSuper(super)
 }

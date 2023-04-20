@@ -20,12 +20,22 @@ import (
 //go:embed rbac_model.conf
 var rbacModel string
 
-type Goal interface {
-	CreateSuper(*auth.User)
-	Router(allowOrigins, trustedProxies []string) *gin.Engine
+type Cookie struct {
+	Domain string
+	Secure bool
 }
 
-func New(db *gorm.DB, models ...any) Goal {
+type Config struct {
+	AllowOrigins, TrustedProxies []string
+	Cookie
+}
+
+type Goal interface {
+	CreateSuper(*auth.User)
+	Router() *gin.Engine
+}
+
+func New(config Config, db *gorm.DB, models ...any) Goal {
 	m := []any{
 		&auth.User{},
 		&auth.Role{},
@@ -47,6 +57,7 @@ func New(db *gorm.DB, models ...any) Goal {
 	util.LogFatal(enforcer.LoadPolicy())
 
 	goal := &goal_web_t{
+		Config:   config,
 		db:       db,
 		enforcer: enforcer,
 		models:   m,
@@ -56,6 +67,7 @@ func New(db *gorm.DB, models ...any) Goal {
 }
 
 type goal_web_t struct {
+	Config
 	enforcer *casbin.Enforcer
 	db       *gorm.DB
 	models   []any
@@ -67,18 +79,18 @@ func (gw *goal_web_t) CreateSuper(super *auth.User) {
 }
 
 // Router implements Goal
-func (gw *goal_web_t) Router(allowOrigins, trustedProxies []string) *gin.Engine {
+func (gw *goal_web_t) Router() *gin.Engine {
 	router := gin.Default()
-	router.Use(middlewares.Cors(allowOrigins))
+	router.Use(middlewares.Cors(gw.AllowOrigins))
 	router.Use(middlewares.Auth(gw.db))
 	// `/admin`
 	adminGroup := router.Group("admin")
 
 	anonymousGroup := adminGroup.Group("")
 	// `/admin/signin`
-	anonymousGroup.POST("signin", handlers.Signin(gw.db))
+	anonymousGroup.POST("signin", handlers.Signin(gw.db, gw.Domain, gw.Secure))
 	// `/admin/signout`
-	anonymousGroup.GET("signout", handlers.Signout(gw.db))
+	anonymousGroup.GET("signout", handlers.Signout(gw.db, gw.Domain, gw.Secure))
 	anonymousGroup.GET("locale", handlers.Translate(gw.getModels()))
 
 	signinRequiredGroup := adminGroup.Group("", middlewares.SigninRequired)
@@ -120,7 +132,7 @@ func (gw *goal_web_t) Router(allowOrigins, trustedProxies []string) *gin.Engine 
 	AuthorizeGroup.GET("select/:field", handlers.Select(gw.db))
 
 	go web.ClearSessions(gw.db)
-	router.SetTrustedProxies(trustedProxies)
+	router.SetTrustedProxies(gw.TrustedProxies)
 	return router
 }
 

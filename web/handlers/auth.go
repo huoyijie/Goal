@@ -14,7 +14,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func Signin(db *gorm.DB) gin.HandlerFunc {
+func Signin(db *gorm.DB, domain string, secure bool) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		form := &web.SigninForm{}
 		if err := c.BindJSON(form); err != nil {
@@ -52,13 +52,13 @@ func Signin(db *gorm.DB) gin.HandlerFunc {
 		c.Set("session", newSession)
 
 		// save new sessionid to cookie
-		web.SetCookieSessionid(c, sessionid, form.RememberMe)
+		web.SetCookieSessionid(c, sessionid, form.RememberMe, domain, secure)
 
 		c.JSON(http.StatusOK, web.Result{Data: user.Username})
 	}
 }
 
-func Signout(db *gorm.DB) gin.HandlerFunc {
+func Signout(db *gorm.DB, domain string, secure bool) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// if a session found, clear it in db
 		if session, found := c.Get("session"); found {
@@ -68,7 +68,7 @@ func Signout(db *gorm.DB) gin.HandlerFunc {
 				return
 			}
 		}
-		web.SetCookieSessionid(c, "", false)
+		web.SetCookieSessionid(c, "", false, domain, secure)
 		c.JSON(http.StatusOK, web.Result{})
 	}
 }

@@ -133,7 +133,7 @@ func GetSession(c *gin.Context) *auth.Session {
 	return nil
 }
 
-func SetCookieSessionid(c *gin.Context, sessionid string, rememberMe bool) {
+func SetCookieSessionid(c *gin.Context, sessionid string, rememberMe bool, domain string, secure bool) {
 	// keep g_sessionid until the browser closed
 	maxAge := 0
 
@@ -144,7 +144,7 @@ func SetCookieSessionid(c *gin.Context, sessionid string, rememberMe bool) {
 		// sign in: remember me was checked
 		maxAge = 3 * 24 * 60 * 60
 	}
-	c.SetCookie("g_sessionid", sessionid, maxAge, "/", "127.0.0.1", false, true)
+	c.SetCookie("g_sessionid", sessionid, maxAge, "/", domain, secure, true)
 }
 
 func ClearSessions(db *gorm.DB) {
