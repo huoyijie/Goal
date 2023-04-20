@@ -441,24 +441,16 @@ func Select(db *gorm.DB) gin.HandlerFunc {
 		f, _ := modelType.FieldByName(field)
 		t := web.GetComponent(f)
 		d := t.(*tag.Dropdown)
+		dt := reflect.TypeOf(d).Elem()
+		dVal := reflect.ValueOf(d).Elem()
+
 		var m string
-		switch {
-		case d.Strings:
-			m = fmt.Sprintf("%sStrings", field)
-		case d.DynamicStrings:
-			m = fmt.Sprintf("%sDynamicStrings", field)
-		case d.Ints:
-			m = fmt.Sprintf("%sInts", field)
-		case d.DynamicInts:
-			m = fmt.Sprintf("%sDynamicInts", field)
-		case d.Uints:
-			m = fmt.Sprintf("%sUints", field)
-		case d.DynamicUints:
-			m = fmt.Sprintf("%sDynamicUints", field)
-		case d.Floats:
-			m = fmt.Sprintf("%sFloats", field)
-		case d.DynamicFloats:
-			m = fmt.Sprintf("%sDynamicFloats", field)
+		for i := 0; i < dt.NumField(); i++ {
+			f := dt.Field(i)
+			if fVal := dVal.FieldByName(f.Name); fVal.Kind() == reflect.Bool && fVal.Bool() {
+				m = fmt.Sprintf("%s%s", field, f.Name)
+				break
+			}
 		}
 
 		getOptions := reflect.ValueOf(model).MethodByName(m)
