@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	router := goal.NewGoal(util.OpenSqliteDB(), &cdn.Resource{}).Router()
+	router := goal.New(util.OpenSqliteDB(), &cdn.Resource{}).Router([]string{"http://127.0.0.1:4000"}, nil)
 	router.Static("uploads", "uploads")
 	router.Run(fmt.Sprintf("%s:%d", "127.0.0.1", 8100))
 }

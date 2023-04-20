@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/huoyijie/Goal"
+	goal "github.com/huoyijie/Goal"
 	"github.com/huoyijie/Goal/auth"
 	"github.com/huoyijie/Goal/util"
 	"golang.org/x/term"
@@ -65,5 +65,5 @@ func main() {
 		IsActive:    true,
 	}
 
-	goal.NewGoal(util.OpenSqliteDB()).NewSuper(super)
+	goal.New(util.OpenSqliteDB()).CreateSuper(super)
 }

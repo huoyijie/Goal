@@ -14,9 +14,9 @@ import (
 	"gorm.io/gorm"
 )
 
-func Cors() gin.HandlerFunc {
+func Cors(allowOrigins []string) gin.HandlerFunc {
 	return cors.New(cors.Config{
-		AllowOrigins:     []string{"http://127.0.0.1:4000"},
+		AllowOrigins:     allowOrigins,
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type"},
 		ExposeHeaders:    []string{"Content-Length"},

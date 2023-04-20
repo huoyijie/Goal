@@ -21,11 +21,11 @@ import (
 var rbacModel string
 
 type Goal interface {
-	NewSuper(*auth.User)
-	Router() *gin.Engine
+	CreateSuper(*auth.User)
+	Router(allowOrigins, trustedProxies []string) *gin.Engine
 }
 
-func NewGoal(db *gorm.DB, models ...any) Goal {
+func New(db *gorm.DB, models ...any) Goal {
 	m := []any{
 		&auth.User{},
 		&auth.Role{},
@@ -61,16 +61,15 @@ type goal_web_t struct {
 	models   []any
 }
 
-// NewSuper implements Goal
-func (gw *goal_web_t) NewSuper(super *auth.User) {
+// CreateSuper implements Goal
+func (gw *goal_web_t) CreateSuper(super *auth.User) {
 	util.LogFatal(gw.db.Create(super).Error)
 }
 
 // Router implements Goal
-func (gw *goal_web_t) Router() *gin.Engine {
+func (gw *goal_web_t) Router(allowOrigins, trustedProxies []string) *gin.Engine {
 	router := gin.Default()
-	router.SetTrustedProxies(nil)
-	router.Use(middlewares.Cors())
+	router.Use(middlewares.Cors(allowOrigins))
 	router.Use(middlewares.Auth(gw.db))
 	// `/admin`
 	adminGroup := router.Group("admin")
@@ -121,6 +120,7 @@ func (gw *goal_web_t) Router() *gin.Engine {
 	AuthorizeGroup.GET("select/:field", handlers.Select(gw.db))
 
 	go web.ClearSessions(gw.db)
+	router.SetTrustedProxies(trustedProxies)
 	return router
 }
 
