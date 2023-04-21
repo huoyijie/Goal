@@ -10,7 +10,7 @@ type People struct {
 	model.Base
 	Name     string   `binding:"required,alpha" goal:"<text>globalSearch,filter"`
 	Age      uint     `binding:"required" goal:"<number>filter,uint"`
-	Identify Identify `goal:"<dropdown>filter,hasOne=country.Identify.NO"`
+	Identify Identify `binding:"required" goal:"<dropdown>filter,hasOne=country.Identify.NO"`
 }
 
 func (*People) Icon() string {
