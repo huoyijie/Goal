@@ -1,0 +1,40 @@
+# yaml-language-server: $schema=https://cdn.huoyijie.cn/uploads/2023/04/goal-schema-v0.0.30.json
+package:
+  value: country
+  en: Country
+  zh_CN: 国家
+name:
+  value: Identify
+  en: Identify | identifies
+  zh_CN: 身份证
+database:
+  embeddingbase: true
+view:
+  icon: id-card
+fields:
+  - name:
+      value: NO
+      en: NO.
+      zh_CN: 号码
+    database:
+      unique: true
+    view:
+      base:
+        globalsearch: true
+        filter: true
+      text: true
+    validator:
+      required: true
+      alphanum: true
+      len: 18
+  - name:
+      value: PeopleID
+      en: People ID
+      zh_CN: 公民ID
+    database:
+      unique: true
+    view:
+      base:
+        autowired: true
+      number:
+        uint: true

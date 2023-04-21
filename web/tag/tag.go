@@ -83,7 +83,7 @@ loop:
 			case reflect.Int:
 				arr = append(arr, fmt.Sprintf("%s=%d", util.ToLowerFirstLetter(f.Name), fVal.Elem().Int()))
 			case reflect.Struct:
-				if f.Name == "BelongTo" || f.Name == "UploadTo" {
+				if f.Name == "BelongTo" || f.Name == "HasOne" || f.Name == "UploadTo" {
 					if tag := fVal.Interface().(Tag).Marshal(); tag != "" {
 						arr = append(arr, tag)
 					}
@@ -140,7 +140,7 @@ func Unmarshal(token string, tag Tag) {
 							}
 						}
 					case reflect.Struct:
-						if f.Name == "BelongTo" || f.Name == "UploadTo" {
+						if f.Name == "BelongTo" || f.Name == "HasOne" || f.Name == "UploadTo" {
 							fVal.Interface().(Tag).Unmarshal(token)
 						}
 					}

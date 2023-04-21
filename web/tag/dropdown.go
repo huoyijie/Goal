@@ -12,6 +12,7 @@ type Dropdown struct {
 	DynamicUints,
 	DynamicFloats bool `json:",omitempty"`
 	BelongTo *BelongTo `json:",omitempty"`
+	HasOne   *HasOne   `json:",omitempty"`
 }
 
 // Head implements Component

@@ -1,0 +1,48 @@
+# yaml-language-server: $schema=https://cdn.huoyijie.cn/uploads/2023/04/goal-schema-v0.0.30.json
+package:
+  value: country
+  en: Country
+  zh_CN: 国家
+name:
+  value: People
+  en: People | people
+  zh_CN: 公民
+database:
+  embeddingbase: true
+view:
+  icon: user
+fields:
+  - name:
+      value: Name
+      en: Name
+      zh_CN: 姓名
+    view:
+      base:
+        globalsearch: true
+        filter: true
+      text: true
+    validator:
+      required: true
+      alpha: true
+  - name:
+      value: Age
+      en: Age
+      zh_CN: 年龄
+    view:
+      base:
+        filter: true
+      number:
+        uint: true
+    validator:
+      required: true
+  - name:
+      value: Identify
+      en: Identify
+      zh_CN: 身份证号码
+    view:
+      base:
+        filter: true
+      dropdown:
+        hasone:
+          name: Identify
+          field: NO
