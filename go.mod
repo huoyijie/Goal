@@ -10,7 +10,7 @@ require (
 	github.com/glebarez/sqlite v1.5.0
 	github.com/go-playground/validator/v10 v10.11.2
 	github.com/google/uuid v1.3.0
-	github.com/huoyijie/GoalGenerator v0.0.31
+	github.com/huoyijie/GoalGenerator v0.0.32
 	golang.org/x/crypto v0.7.0
 	golang.org/x/term v0.6.0
 	gorm.io/gorm v1.24.6

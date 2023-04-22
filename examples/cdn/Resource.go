@@ -57,7 +57,7 @@ func (*Resource) StatusStrings() []string {
 }
 
 func (*Resource) TranslateStatusStrings() map[string]map[string]string {
-	return map[string]map[string]string{"en": {"tbd": "TBD", "on": "ON", "off": "OFF"}, "zh-CN": {"tbd": "<invalid Value>", "on": "<invalid Value>", "off": "<invalid Value>"}}
+	return map[string]map[string]string{"en": {"tbd": "TBD", "on": "ON", "off": "OFF"}, "zh-CN": {"tbd": "待审核", "on": "上线", "off": "下线"}}
 }
 
 func (*Resource) LevelUints() []uint {
@@ -65,7 +65,7 @@ func (*Resource) LevelUints() []uint {
 }
 
 func (*Resource) TranslateLevelUints() map[string]map[string]string {
-	return map[string]map[string]string{"en": {"1": "one", "2": "two", "3": "three"}, "zh-CN": {"1": "<invalid Value>", "2": "<invalid Value>", "3": "<invalid Value>"}}
+	return map[string]map[string]string{"en": {"1": "one", "2": "two", "3": "three"}, "zh-CN": {"1": "一", "2": "二", "3": "三"}}
 }
 
 func (m *Resource) TranslateOptions() map[string]map[string]map[string]string {

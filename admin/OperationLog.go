@@ -98,7 +98,7 @@ func (*OperationLog) ActionStrings() []string {
 }
 
 func (*OperationLog) TranslateActionStrings() map[string]map[string]string {
-	return map[string]map[string]string{"en": {"post": "Add", "put": "Change", "delete": "Delete"}, "zh-CN": {"post": "<invalid Value>", "put": "<invalid Value>", "delete": "<invalid Value>"}}
+	return map[string]map[string]string{"en": {"post": "Add", "put": "Change", "delete": "Delete"}, "zh-CN": {"post": "新增", "put": "修改", "delete": "删除"}}
 }
 
 func (m *OperationLog) TranslateOptions() map[string]map[string]map[string]string {
