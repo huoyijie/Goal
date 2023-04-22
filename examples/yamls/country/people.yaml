@@ -1,12 +1,12 @@
-# yaml-language-server: $schema=https://cdn.huoyijie.cn/uploads/2023/04/goal-schema-v0.0.30.json
+# yaml-language-server: $schema=https://cdn.huoyijie.cn/uploads/2023/04/goal-schema-v0.0.31.json
 package:
   value: country
   en: Country
-  zh_CN: 国家
+  zh-CN: 国家
 name:
   value: People
   en: People | people
-  zh_CN: 公民
+  zh-CN: 公民
 database:
   embeddingbase: true
 view:
@@ -15,7 +15,7 @@ fields:
   - name:
       value: Name
       en: Name
-      zh_CN: 姓名
+      zh-CN: 姓名
     view:
       base:
         globalsearch: true
@@ -27,7 +27,7 @@ fields:
   - name:
       value: Age
       en: Age
-      zh_CN: 年龄
+      zh-CN: 年龄
     view:
       base:
         filter: true
@@ -38,7 +38,7 @@ fields:
   - name:
       value: Identify
       en: Identify
-      zh_CN: 身份证号码
+      zh-CN: 身份证号码
     view:
       base:
         filter: true

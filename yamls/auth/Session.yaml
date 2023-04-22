@@ -1,12 +1,12 @@
-# yaml-language-server: $schema=https://cdn.huoyijie.cn/uploads/2023/04/goal-schema-v0.0.30.json
+# yaml-language-server: $schema=https://cdn.huoyijie.cn/uploads/2023/04/goal-schema-v0.0.31.json
 package:
   value: auth
   en: Auth
-  zh_CN: 认证授权
+  zh-CN: 认证授权
 name:
   value: Session
   en: Session | sessions
-  zh_CN: 会话
+  zh-CN: 会话
 database:
   embeddingbase: true
   purge: true
@@ -18,7 +18,7 @@ fields:
   - name:
       value: Key
       en: Key
-      zh_CN: 会话
+      zh-CN: 会话
     database:
       unique: true
     view:
@@ -34,7 +34,7 @@ fields:
   - name:
       value: UserID
       en: User ID
-      zh_CN: 用户ID
+      zh-CN: 用户ID
     view:
       number:
         uint: true
@@ -43,7 +43,7 @@ fields:
   - name:
       value: User
       en: User
-      zh_CN: 用户
+      zh-CN: 用户
     view:
       dropdown:
         belongto:
@@ -57,7 +57,7 @@ fields:
   - name:
       value: ExpireDate
       en: Expire Date
-      zh_CN: 过期时间
+      zh-CN: 过期时间
     database:
       index: true
     view:

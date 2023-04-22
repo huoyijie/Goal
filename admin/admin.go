@@ -29,14 +29,14 @@ outer:
 }
 
 func (*OperationLog) TranslateGroupDynamicStrings() map[string]map[string]string {
-	r := map[string]map[string]string{"en": {}, "zh_CN": {}}
+	r := map[string]map[string]string{"en": {}, "zh-CN": {}}
 	for _, i := range items {
 		g := group(i)
 		if _, found := r["en"][g]; !found {
 			t := i.(model.Translate)
 			tPkg := t.TranslatePkg()
 			r["en"][g] = tPkg["en"]
-			r["zh_CN"][g] = tPkg["zh_CN"]
+			r["zh-CN"][g] = tPkg["zh-CN"]
 		}
 	}
 	return r
@@ -50,14 +50,14 @@ func (*OperationLog) ItemDynamicStrings() (strings []string) {
 }
 
 func (*OperationLog) TranslateItemDynamicStrings() map[string]map[string]string {
-	r := map[string]map[string]string{"en": {}, "zh_CN": {}}
+	r := map[string]map[string]string{"en": {}, "zh-CN": {}}
 	for _, i := range items {
 		it := item(i)
 		if _, found := r["en"][it]; !found {
 			t := i.(model.Translate)
 			tName := t.TranslateName()
 			r["en"][it] = tName["en"]
-			r["zh_CN"][it] = tName["zh_CN"]
+			r["zh-CN"][it] = tName["zh-CN"]
 		}
 	}
 	return r

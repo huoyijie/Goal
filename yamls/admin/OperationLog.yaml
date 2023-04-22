@@ -1,12 +1,12 @@
-# yaml-language-server: $schema=https://cdn.huoyijie.cn/uploads/2023/04/goal-schema-v0.0.30.json
+# yaml-language-server: $schema=https://cdn.huoyijie.cn/uploads/2023/04/goal-schema-v0.0.31.json
 package:
   value: admin
   en: Admin
-  zh_CN: 通用管理
+  zh-CN: 通用管理
 name:
   value: OperationLog
   en: Operation Log | operation logs
-  zh_CN: 操作日志
+  zh-CN: 操作日志
 database:
   embeddingbase: true
   tablename: admin_operation_logs
@@ -18,7 +18,7 @@ fields:
   - name:
       value: UserID
       en: User ID
-      zh_CN: 用户ID
+      zh-CN: 用户ID
     database:
       index: true
     view:
@@ -29,7 +29,7 @@ fields:
   - name:
       value: User
       en: User
-      zh_CN: 用户
+      zh-CN: 用户
     view:
       dropdown:
         belongto:
@@ -43,7 +43,7 @@ fields:
   - name:
       value: Date
       en: Date
-      zh_CN: 时间
+      zh-CN: 时间
     database:
       index: true
     view:
@@ -56,7 +56,7 @@ fields:
   - name:
       value: IP
       en: IP
-      zh_CN: IP
+      zh-CN: IP
     view:
       text: true
       base:
@@ -64,7 +64,7 @@ fields:
   - name:
       value: Group
       en: Group
-      zh_CN: 组
+      zh-CN: 组
     view:
       dropdown:
         option:
@@ -75,7 +75,7 @@ fields:
   - name:
       value: Item
       en: Item
-      zh_CN: 项
+      zh-CN: 项
     view:
       dropdown:
         option:
@@ -86,26 +86,26 @@ fields:
   - name:
       value: Action
       en: Action
-      zh_CN: 动作
+      zh-CN: 动作
     view:
       dropdown:
         option:
           strings:
             - value: "post"
               en: "Add"
-              zh_CN: "新增"
+              zh-CN: "新增"
             - value: "put"
               en: "Change"
-              zh_CN: "修改"
+              zh-CN: "修改"
             - value: "delete"
               en: "Delete"
-              zh_CN: "删除"
+              zh-CN: "删除"
       base:
         filter: true
   - name:
       value: ObjectID
       en: Object ID
-      zh_CN: 目标ID
+      zh-CN: 目标ID
     view:
       number:
         uint: true

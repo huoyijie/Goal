@@ -1,12 +1,12 @@
-# yaml-language-server: $schema=https://cdn.huoyijie.cn/uploads/2023/04/goal-schema-v0.0.30.json
+# yaml-language-server: $schema=https://cdn.huoyijie.cn/uploads/2023/04/goal-schema-v0.0.31.json
 package:
   value: country
   en: Country
-  zh_CN: 国家
+  zh-CN: 国家
 name:
   value: Identify
   en: Identify | identifies
-  zh_CN: 身份证
+  zh-CN: 身份证
 database:
   embeddingbase: true
 view:
@@ -15,7 +15,7 @@ fields:
   - name:
       value: NO
       en: NO.
-      zh_CN: 号码
+      zh-CN: 号码
     database:
       unique: true
     view:
@@ -30,7 +30,7 @@ fields:
   - name:
       value: PeopleID
       en: People ID
-      zh_CN: 公民ID
+      zh-CN: 公民ID
     database:
       unique: true
     view:

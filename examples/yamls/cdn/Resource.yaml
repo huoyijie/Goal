@@ -1,12 +1,12 @@
-# yaml-language-server: $schema=https://cdn.huoyijie.cn/uploads/2023/04/goal-schema-v0.0.30.json
+# yaml-language-server: $schema=https://cdn.huoyijie.cn/uploads/2023/04/goal-schema-v0.0.31.json
 package:
   value: cdn
   en: CDN
-  zh_CN: CDN
+  zh-CN: CDN
 name:
   value: Resource
   en: Resource | resources
-  zh_CN: 资源
+  zh-CN: 资源
 database:
   embeddingbase: true
   purge: true
@@ -17,7 +17,7 @@ fields:
   - name:
       value: File
       en: File
-      zh_CN: 文件
+      zh-CN: 文件
     database:
       unique: true
     view:
@@ -32,20 +32,20 @@ fields:
   - name:
       value: Status
       en: Status
-      zh_CN: 状态
+      zh-CN: 状态
     view:
       dropdown:
         option:
           strings:
             - value: "tbd"
               en: "TBD"
-              zh_CN: "待审核"
+              zh-CN: "待审核"
             - value: "on"
               en: "ON"
-              zh_CN: "上线"
+              zh-CN: "上线"
             - value: "off"
               en: "OFF"
-              zh_CN: "下线"
+              zh-CN: "下线"
       base:
         filter: true
     validator:
@@ -53,20 +53,20 @@ fields:
   - name:
       value: Level
       en: Level
-      zh_CN: 等级
+      zh-CN: 等级
     view:
       dropdown:
         option:
           uints:
           - value: 1
             en: "one"
-            zh_CN: "一"
+            zh-CN: "一"
           - value: 2
             en: "two"
-            zh_CN: "二"
+            zh-CN: "二"
           - value: 3
             en: "three"
-            zh_CN: "三"
+            zh-CN: "三"
       base:
         filter: true
     validator:

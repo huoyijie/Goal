@@ -1,12 +1,12 @@
-# yaml-language-server: $schema=https://cdn.huoyijie.cn/uploads/2023/04/goal-schema-v0.0.30.json
+# yaml-language-server: $schema=https://cdn.huoyijie.cn/uploads/2023/04/goal-schema-v0.0.31.json
 package:
   value: auth
   en: Auth
-  zh_CN: 认证授权
+  zh-CN: 认证授权
 name:
   value: User
   en: User | users
-  zh_CN: 用户
+  zh-CN: 用户
 database:
   embeddingbase: true
   tablename: auth_users
@@ -17,7 +17,7 @@ fields:
   - name:
       value: Username
       en: Username
-      zh_CN: 用户名
+      zh-CN: 用户名
     database:
       unique: true
     view:
@@ -34,7 +34,7 @@ fields:
   - name:
       value: Email
       en: Email
-      zh_CN: 邮件地址
+      zh-CN: 邮件地址
     database:
       unique: true
     view:
@@ -48,7 +48,7 @@ fields:
   - name:
       value: Password
       en: Password
-      zh_CN: 密码
+      zh-CN: 密码
     view:
       password: true
       base:
@@ -60,7 +60,7 @@ fields:
   - name:
       value: IsSuperuser
       en: Super User
-      zh_CN: 超级管理员
+      zh-CN: 超级管理员
     view:
       switch: true
       base:
@@ -69,7 +69,7 @@ fields:
   - name:
       value: IsActive
       en: Active
-      zh_CN: 有效
+      zh-CN: 有效
     view:
       switch: true
       base:

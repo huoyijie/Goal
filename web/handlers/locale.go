@@ -8,7 +8,7 @@ import (
 	"github.com/huoyijie/GoalGenerator/model"
 )
 
-var langs = []string{"en", "zh_CN"}
+var langs = []string{"en", "zh-CN"}
 
 func Translate(models []any) gin.HandlerFunc {
 	return func(c *gin.Context) {
