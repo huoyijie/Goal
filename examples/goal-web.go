@@ -5,7 +5,9 @@ import (
 
 	"github.com/huoyijie/Goal"
 	"github.com/huoyijie/Goal/examples/cdn"
+	"github.com/huoyijie/Goal/examples/class"
 	"github.com/huoyijie/Goal/examples/country"
+	"github.com/huoyijie/Goal/examples/paper"
 	"github.com/huoyijie/Goal/util"
 )
 
@@ -19,7 +21,16 @@ func main() {
 		},
 	}
 	db := util.OpenSqliteDB()
-	router := goal.New(config, db, &cdn.Resource{}, &country.Identify{}, &country.People{}).Router()
+	models := []any{
+		&cdn.Resource{},
+		&country.Identify{},
+		&country.People{},
+		&paper.Question{},
+		&paper.Choice{},
+		&class.Student{},
+		&class.Teacher{},
+	}
+	router := goal.New(config, db, models...).Router()
 	router.Static("uploads", "uploads")
 	router.Run(fmt.Sprintf("%s:%d", "127.0.0.1", 8100))
 }

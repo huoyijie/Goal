@@ -94,8 +94,6 @@ func Reflect(modelType reflect.Type) (secrets, preloads, columns []Column) {
 			continue
 		}
 
-		validateRule := GetBindingTag(field)
-
 		component := GetComponent(field)
 		if component == nil {
 			continue
@@ -107,7 +105,7 @@ func Reflect(modelType reflect.Type) (secrets, preloads, columns []Column) {
 				component.Head(),
 				component,
 			},
-			validateRule,
+			GetBindingTag(field),
 		}
 
 		if component.(tag.IBase).Get().Autowired {

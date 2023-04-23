@@ -1,0 +1,35 @@
+# yaml-language-server: $schema=https://cdn.huoyijie.cn/uploads/2023/04/goal-schema-v0.0.35.json
+package:
+  value: paper
+  en: Paper
+  zh-CN: 试卷
+name:
+  value: Question
+  en: Question | questions
+  zh-CN: 问题
+database:
+  embeddingbase: true
+view:
+  icon: paper
+fields:
+  - name:
+      value: Label
+      en: Label
+      zh-CN: 题干
+    database:
+      unique: true
+    view:
+      base:
+        globalsearch: true
+        filter: true
+      text: true
+    validator:
+      required: true
+  - name:
+      value: Choices
+      en: Choices
+      zh-CN: 选项
+    view:
+      inline:
+        hasmany:
+          name: Choice

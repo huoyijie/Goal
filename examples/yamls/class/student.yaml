@@ -1,0 +1,35 @@
+# yaml-language-server: $schema=https://cdn.huoyijie.cn/uploads/2023/04/goal-schema-v0.0.35.json
+package:
+  value: class
+  en: Class
+  zh-CN: 班级
+name:
+  value: Student
+  en: Student | students
+  zh-CN: 学生
+database:
+  embeddingbase: true
+view:
+  icon: student
+fields:
+  - name:
+      value: Name
+      en: Name
+      zh-CN: 姓名
+    view:
+      base:
+        globalsearch: true
+        filter: true
+      text: true
+    validator:
+      required: true
+  - name:
+      value: Teachers
+      en: Teachers
+      zh-CN: 老师
+    view:
+      multiselect:
+        many2many:
+          name: Teacher
+    validator:
+      required: true

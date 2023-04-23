@@ -1,23 +1,21 @@
 # yaml-language-server: $schema=https://cdn.huoyijie.cn/uploads/2023/04/goal-schema-v0.0.35.json
 package:
-  value: country
-  en: Country
-  zh-CN: 国家
+  value: paper
+  en: Paper
+  zh-CN: 试卷
 name:
-  value: Identify
-  en: Identify | identifies
-  zh-CN: 身份证
+  value: Choice
+  en: Choice | choices
+  zh-CN: 选项
 database:
   embeddingbase: true
 view:
-  icon: id-card
+  icon: choice
 fields:
   - name:
-      value: NO
-      en: NO.
-      zh-CN: 号码
-    database:
-      unique: true
+      value: Content
+      en: Content
+      zh-CN: 内容
     view:
       base:
         globalsearch: true
@@ -25,14 +23,10 @@ fields:
       text: true
     validator:
       required: true
-      alphanum: true
-      len: 18
   - name:
-      value: PeopleID
-      en: People ID
-      zh-CN: 公民ID
-    database:
-      unique: true
+      value: QuestionID
+      en: Question ID
+      zh-CN: 问题ID
     view:
       base:
         autowired: true

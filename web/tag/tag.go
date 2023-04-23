@@ -17,6 +17,8 @@ var COMPONETS = []Component{
 	&Uuid{},
 	&Switch{},
 	&File{},
+	&Inline{},
+	&MultiSelect{},
 }
 
 // define a Component
@@ -140,9 +142,7 @@ func Unmarshal(token string, tag Tag) {
 							}
 						}
 					case reflect.Struct:
-						if f.Name == "BelongTo" || f.Name == "HasOne" || f.Name == "UploadTo" {
-							fVal.Interface().(Tag).Unmarshal(token)
-						}
+						fVal.Interface().(Tag).Unmarshal(token)
 					}
 				}
 			}
