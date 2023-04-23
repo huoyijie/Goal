@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=https://cdn.huoyijie.cn/uploads/2023/04/goal-schema-v0.0.35.json
+# yaml-language-server: $schema=https://cdn.huoyijie.cn/uploads/2023/04/goal-schema-v0.0.36.json
 package:
   value: class
   en: Class
@@ -31,5 +31,6 @@ fields:
       multiselect:
         many2many:
           name: Teacher
+          field: Name
     validator:
       required: true
