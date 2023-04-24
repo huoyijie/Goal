@@ -83,13 +83,13 @@ func GetBindingTag(field reflect.StructField) string {
 	return field.Tag.Get("binding")
 }
 
-func Reflect(modelType reflect.Type) (secrets, preloads, columns []Column) {
+func Reflect(modelType reflect.Type) (secrets, joins, columns []Column) {
 	for i := 0; i < modelType.NumField(); i++ {
 		field := modelType.Field(i)
 		if field.Name == "Base" {
 			s, p, c := Reflect(field.Type)
 			secrets = append(secrets, s...)
-			preloads = append(preloads, p...)
+			joins = append(joins, p...)
 			columns = append(columns, c...)
 			continue
 		}
@@ -116,7 +116,7 @@ func Reflect(modelType reflect.Type) (secrets, preloads, columns []Column) {
 		}
 
 		if d, ok := component.(*tag.Dropdown); ok && (d.BelongTo != nil || d.HasOne != nil) {
-			preloads = append(preloads, column)
+			joins = append(joins, column)
 		}
 		columns = append(columns, column)
 	}

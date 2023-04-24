@@ -78,10 +78,10 @@ func crud(c *gin.Context, action string, db *gorm.DB, enforcer *casbin.Enforcer)
 	c.JSON(http.StatusOK, web.Result{Data: record})
 }
 
-func preload(preloads []web.Column) func(*gorm.DB) *gorm.DB {
+func join(joins []web.Column) func(*gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) (tx *gorm.DB) {
 		tx = db
-		for _, column := range preloads {
+		for _, column := range joins {
 			tx = tx.Joins(column.Name)
 		}
 		return
@@ -257,10 +257,10 @@ func crudGet(c *gin.Context, db *gorm.DB, mine bool) {
 		}
 	}
 
-	secrets, preloads, _ := web.Reflect(modelType)
+	secrets, joins, _ := web.Reflect(modelType)
 
 	var total int64
-	if err := db.Scopes(filters(model, modelType, session, mine, lazyParam), preload(preloads)).Count(&total).Error; err != nil {
+	if err := db.Scopes(filters(model, modelType, session, mine, lazyParam), join(joins)).Count(&total).Error; err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
@@ -269,7 +269,7 @@ func crudGet(c *gin.Context, db *gorm.DB, mine bool) {
 
 	if err := db.Scopes(
 		filters(model, modelType, session, mine, lazyParam),
-		preload(preloads),
+		join(joins),
 		pagiSort(model, modelType, lazyParam),
 	).Find(records).Error; err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
@@ -279,7 +279,7 @@ func crudGet(c *gin.Context, db *gorm.DB, mine bool) {
 	recordsVal := reflect.ValueOf(records).Elem()
 	web.SecureRecords(secrets, recordsVal)
 
-	for _, c := range preloads {
+	for _, c := range joins {
 		for i := 0; i < recordsVal.Len(); i++ {
 			recordVal := recordsVal.Index(i)
 			preloadVal := recordVal.FieldByName(c.Name)
