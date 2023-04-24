@@ -2,6 +2,7 @@ package web
 
 import (
 	"fmt"
+	"net/http"
 	"path/filepath"
 	"reflect"
 	"strconv"
@@ -83,13 +84,14 @@ func GetBindingTag(field reflect.StructField) string {
 	return field.Tag.Get("binding")
 }
 
-func Reflect(modelType reflect.Type) (secrets, joins, columns []Column) {
+func Reflect(modelType reflect.Type) (secrets, joins, preloads, columns []Column) {
 	for i := 0; i < modelType.NumField(); i++ {
 		field := modelType.Field(i)
 		if field.Name == "Base" {
-			s, p, c := Reflect(field.Type)
+			s, j, p, c := Reflect(field.Type)
 			secrets = append(secrets, s...)
-			joins = append(joins, p...)
+			joins = append(joins, j...)
+			preloads = append(preloads, p...)
 			columns = append(columns, c...)
 			continue
 		}
@@ -115,8 +117,22 @@ func Reflect(modelType reflect.Type) (secrets, joins, columns []Column) {
 			secrets = append(secrets, column)
 		}
 
-		if d, ok := component.(*tag.Dropdown); ok && (d.BelongTo != nil || d.HasOne != nil) {
-			joins = append(joins, column)
+		switch c := component.(type) {
+		case *tag.Dropdown:
+			if c.BelongTo != nil || c.HasOne != nil {
+				joins = append(joins, column)
+			}
+		case *tag.Inline:
+			if c.HasOne != nil {
+				joins = append(joins, column)
+			}
+			if c.HasMany != nil {
+				preloads = append(preloads, column)
+			}
+		case *tag.MultiSelect:
+			if c.Many2Many != nil {
+				preloads = append(preloads, column)
+			}
 		}
 		columns = append(columns, column)
 	}
@@ -186,12 +202,55 @@ func RecordOpLogs(db *gorm.DB, c *gin.Context, ids []uint, action string) {
 	db.Create(&opLogs)
 }
 
-func AutowiredCreator(c *gin.Context, action string, record any) {
-	if action == "post" {
-		creatorField := reflect.ValueOf(record).Elem().FieldByName("Creator")
-		if creatorField.IsValid() {
-			session := GetSession(c)
-			creatorField.SetUint(uint64(session.UserID))
+func AutowiredCreator(c *gin.Context, record any) {
+	creatorField := reflect.ValueOf(record).Elem().FieldByName("Creator")
+	if creatorField.IsValid() {
+		session := GetSession(c)
+		creatorField.SetUint(uint64(session.UserID))
+	}
+}
+
+func HandlePassword(c *gin.Context, record any, db *gorm.DB) {
+	switch r := record.(type) {
+	case *auth.User:
+		if r.Password == PASSWORD_PLACEHOLDER {
+			o := &auth.User{}
+			o.ID = r.ID
+			if err := db.First(o).Error; err != nil {
+				c.AbortWithStatus(http.StatusInternalServerError)
+				return
+			}
+			r.Password = o.Password
+		} else {
+			r.Password = util.BcryptHash(r.Password)
+		}
+	}
+}
+
+func HandleEnforcer(record any, enforcer *casbin.Enforcer) {
+	switch r := record.(type) {
+	case *auth.Role:
+		enforcer.DeletePermissionsForUser(r.RoleID())
+	case *auth.User:
+		enforcer.DeleteRolesForUser(r.Sub())
+	}
+}
+
+func HandleBatchEnforcer(ids []uint, model any, enforcer *casbin.Enforcer) {
+	switch model.(type) {
+	case *auth.Role:
+		for _, id := range ids {
+			role := auth.Role{}
+			role.ID = id
+			enforcer.DeletePermissionsForUser(role.RoleID())
+			enforcer.DeleteRole(role.RoleID())
+		}
+	case *auth.User:
+		for _, id := range ids {
+			user := auth.User{}
+			user.ID = id
+			enforcer.DeleteRolesForUser(user.Sub())
+			enforcer.DeleteUser(user.Sub())
 		}
 	}
 }

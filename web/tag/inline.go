@@ -2,7 +2,8 @@ package tag
 
 type Inline struct {
 	Base
-	HasMany   *HasMany   `json:",omitempty"`
+	HasOne  *HasOne  `json:",omitempty"`
+	HasMany *HasMany `json:",omitempty"`
 }
 
 // Head implements Component

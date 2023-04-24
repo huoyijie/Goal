@@ -18,6 +18,7 @@ import (
 	"github.com/huoyijie/Goal/web"
 	"github.com/huoyijie/Goal/web/tag"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 func purge(record any) func(*gorm.DB) *gorm.DB {
@@ -41,31 +42,23 @@ func crud(c *gin.Context, action string, db *gorm.DB, enforcer *casbin.Enforcer)
 
 	var tx *gorm.DB
 	switch action {
-	case "post", "put":
-		web.AutowiredCreator(c, action, record)
-		switch r := record.(type) {
-		case *auth.User:
-			if action == "put" && r.Password == web.PASSWORD_PLACEHOLDER {
-				o := &auth.User{}
-				o.ID = r.ID
-				if err := db.First(o).Error; err != nil {
-					c.AbortWithStatus(http.StatusInternalServerError)
-					return
-				}
-				r.Password = o.Password
-			} else {
-				r.Password = util.BcryptHash(r.Password)
+	case "post":
+		web.AutowiredCreator(c, record)
+		tx = db.Create(record)
+	case "put":
+		web.HandlePassword(c, record, db)
+		_, _, preloads, _ := web.Reflect(modelType)
+		if len(preloads) > 0 {
+			r := reflect.New(modelType)
+			r.Elem().FieldByName("ID").SetUint(reflect.ValueOf(record).Elem().FieldByName("ID").Uint())
+			for _, column := range preloads {
+				db.Model(r.Interface()).Association(column.Name).Clear()
 			}
 		}
 		tx = db.Save(record)
 	case "delete":
-		switch r := record.(type) {
-		case *auth.Role:
-			enforcer.DeletePermissionsForUser(r.RoleID())
-		case *auth.User:
-			enforcer.DeleteRolesForUser(r.Sub())
-		}
-		tx = db.Scopes(purge(record)).Delete(record)
+		web.HandleEnforcer(record, enforcer)
+		tx = db.Scopes(purge(record)).Select(clause.Associations).Delete(record)
 	}
 
 	if err := tx.Error; err != nil {
@@ -83,6 +76,16 @@ func join(joins []web.Column) func(*gorm.DB) *gorm.DB {
 		tx = db
 		for _, column := range joins {
 			tx = tx.Joins(column.Name)
+		}
+		return
+	}
+}
+
+func preload(preloads []web.Column) func(*gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) (tx *gorm.DB) {
+		tx = db
+		for _, column := range preloads {
+			tx = tx.Preload(column.Name)
 		}
 		return
 	}
@@ -142,16 +145,21 @@ func filters(model any, modelType reflect.Type, session *auth.Session, mine bool
 				v := kv[1].(map[string]any)
 
 				if k == "global" {
-					_, _, columns := web.Reflect(modelType)
+					_, _, _, columns := web.Reflect(modelType)
 					for _, c := range columns {
 						base := c.Component.Tag.(tag.IBase).Get()
 						if base.GlobalSearch {
 							filterField := c.Name
-							if d, ok := c.Component.Tag.(*tag.Dropdown); ok {
-								if d.BelongTo != nil {
-									filterField = fmt.Sprintf("%s.%s", d.BelongTo.Name, d.BelongTo.Field)
-								} else if d.HasOne != nil {
-									filterField = fmt.Sprintf("%s.%s", d.HasOne.Name, d.HasOne.Field)
+							switch com := c.Component.Tag.(type) {
+							case *tag.Dropdown:
+								if com.BelongTo != nil {
+									filterField = fmt.Sprintf("%s.%s", com.BelongTo.Name, com.BelongTo.Field)
+								} else if com.HasOne != nil {
+									filterField = fmt.Sprintf("%s.%s", com.HasOne.Name, com.HasOne.Field)
+								}
+							case *tag.Inline:
+								if com.HasOne != nil {
+									filterField = fmt.Sprintf("%s.%s", com.HasOne.Name, com.HasOne.Field)
 								}
 							}
 
@@ -257,10 +265,10 @@ func crudGet(c *gin.Context, db *gorm.DB, mine bool) {
 		}
 	}
 
-	secrets, joins, _ := web.Reflect(modelType)
+	secrets, joins, preloads, _ := web.Reflect(modelType)
 
 	var total int64
-	if err := db.Scopes(filters(model, modelType, session, mine, lazyParam), join(joins)).Count(&total).Error; err != nil {
+	if err := db.Scopes(filters(model, modelType, session, mine, lazyParam), join(joins), preload(preloads)).Count(&total).Error; err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
@@ -270,6 +278,7 @@ func crudGet(c *gin.Context, db *gorm.DB, mine bool) {
 	if err := db.Scopes(
 		filters(model, modelType, session, mine, lazyParam),
 		join(joins),
+		preload(preloads),
 		pagiSort(model, modelType, lazyParam),
 	).Find(records).Error; err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
@@ -283,7 +292,7 @@ func crudGet(c *gin.Context, db *gorm.DB, mine bool) {
 		for i := 0; i < recordsVal.Len(); i++ {
 			recordVal := recordsVal.Index(i)
 			preloadVal := recordVal.FieldByName(c.Name)
-			secrets, _, _ := web.Reflect(reflect.TypeOf(preloadVal.Interface()))
+			secrets, _, _, _ := web.Reflect(reflect.TypeOf(preloadVal.Interface()))
 			web.SecureRecord(secrets, preloadVal)
 		}
 	}
@@ -295,7 +304,7 @@ func CrudDataTable(enforcer *casbin.Enforcer) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		mt, _ := c.Get("modelType")
 		modelType := mt.(reflect.Type)
-		_, _, columns := web.Reflect(modelType)
+		_, _, _, columns := web.Reflect(modelType)
 
 		session := web.GetSession(c)
 		model, _ := c.Get("model")
@@ -351,30 +360,26 @@ func CrudDelete(db *gorm.DB, enforcer *casbin.Enforcer) gin.HandlerFunc {
 func CrudBatchDelete(db *gorm.DB, enforcer *casbin.Enforcer) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		model, _ := c.Get("model")
+		mt, _ := c.Get("modelType")
+		modelType := mt.(reflect.Type)
 
-		ids := []uint{}
-		if err := c.BindJSON(&ids); err != nil {
+		recordsVal := reflect.New(reflect.SliceOf(modelType))
+		records := recordsVal.Interface()
+		if err := c.BindJSON(records); err != nil {
 			return
 		}
 
-		switch model.(type) {
-		case *auth.Role:
-			for _, id := range ids {
-				role := auth.Role{}
-				role.ID = id
-				enforcer.DeletePermissionsForUser(role.RoleID())
-				enforcer.DeleteRole(role.RoleID())
-			}
-		case *auth.User:
-			for _, id := range ids {
-				user := auth.User{}
-				user.ID = id
-				enforcer.DeleteRolesForUser(user.Sub())
-				enforcer.DeleteUser(user.Sub())
+		var ids []uint
+		for i := 0; i < recordsVal.Elem().Len(); i++ {
+			record := recordsVal.Elem().Index(i)
+			if f := record.FieldByName("ID"); f.IsValid() {
+				ids = append(ids, uint(f.Uint()))
 			}
 		}
 
-		if err := db.Scopes(purge(model)).Delete(model, ids).Error; err != nil {
+		web.HandleBatchEnforcer(ids, model, enforcer)
+
+		if err := db.Scopes(purge(model)).Select(clause.Associations).Delete(records).Error; err != nil {
 			c.AbortWithStatus(http.StatusInternalServerError)
 			return
 		}
