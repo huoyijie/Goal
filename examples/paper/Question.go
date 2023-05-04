@@ -9,12 +9,14 @@ import (
 type Question struct {
 	model.Base
 	Label   string   `gorm:"unique" binding:"required" goal:"<text>unique,globalSearch,filter"`
-	Choices []Choice `goal:"<inline>hasMany=paper.Choice"`
+	Choices []Choice `binding:"required" goal:"<inline>hasMany=paper.Choice"`
 }
 
 func (*Question) Icon() string {
 	return "paper"
 }
+
+func (*Question) Purge() {}
 
 func (*Question) TranslatePkg() map[string]string {
 	t := map[string]string{}

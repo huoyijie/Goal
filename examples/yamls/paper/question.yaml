@@ -9,6 +9,7 @@ name:
   zh-CN: 问题
 database:
   embeddingbase: true
+  purge: true
 view:
   icon: paper
 fields:
@@ -33,3 +34,5 @@ fields:
       inline:
         hasmany:
           name: Choice
+    validator:
+      required: true

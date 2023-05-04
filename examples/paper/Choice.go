@@ -16,6 +16,8 @@ func (*Choice) Icon() string {
 	return "choice"
 }
 
+func (*Choice) Purge() {}
+
 func (*Choice) TranslatePkg() map[string]string {
 	t := map[string]string{}
 	t["en"] = "Paper"

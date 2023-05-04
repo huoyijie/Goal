@@ -52,7 +52,11 @@ func crud(c *gin.Context, action string, db *gorm.DB, enforcer *casbin.Enforcer)
 			r := reflect.New(modelType)
 			r.Elem().FieldByName("ID").SetUint(reflect.ValueOf(record).Elem().FieldByName("ID").Uint())
 			for _, column := range preloads {
-				db.Model(r.Interface()).Association(column.Name).Clear()
+				if _, ok := column.Component.Tag.(*tag.MultiSelect); ok {
+					db.Model(r.Interface()).Association(column.Name).Clear()
+				} else {
+					db.Unscoped().Select(clause.Associations).Delete(r.Interface())
+				}
 			}
 		}
 		tx = db.Save(record)
