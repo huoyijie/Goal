@@ -3,13 +3,20 @@
 package paper
 
 import (
+	"github.com/huoyijie/Goal/examples/class"
 	"github.com/huoyijie/GoalGenerator/model"
+	"time"
 )
 
 type Choice struct {
 	model.Base
-	Content    string `binding:"required" goal:"<text>globalSearch,filter"`
-	QuestionID uint   `goal:"<number>autowired,uint"`
+	Content    string          `binding:"required" goal:"<text>globalSearch,filter"`
+	Point      uint            `binding:"required" goal:"<dropdown>uints"`
+	Limit      uint            `binding:"min=2,max=10" goal:"<number>uint"`
+	Expire     time.Time       `binding:"required" goal:"<calendar>showTime,showIcon"`
+	Answer     string          `binding:"required" goal:"<file>uploadTo=uploads"`
+	Teachers   []class.Teacher `gorm:"many2many:choice_teachers" binding:"required" goal:"<multiSelect>many2Many=class.Teacher.Name"`
+	QuestionID uint            `goal:"<number>autowired,uint"`
 }
 
 func (*Choice) Icon() string {
@@ -37,18 +44,40 @@ func (*Choice) TranslateFields() map[string]map[string]string {
 		"en": {
 			"ID":         "ID",
 			"Content":    "Content",
+			"Point":      "Point",
+			"Limit":      "Limit",
+			"Expire":     "Expire",
+			"Answer":     "Answer",
+			"Teachers":   "Teachers",
 			"QuestionID": "Question ID",
 		},
 		"zh-CN": {
 			"ID":         "ID",
 			"Content":    "内容",
+			"Point":      "分数",
+			"Limit":      "上限",
+			"Expire":     "有效时间",
+			"Answer":     "答案",
+			"Teachers":   "责任老师",
 			"QuestionID": "问题ID",
 		},
 	}
 }
 
+func (*Choice) PointUints() []uint {
+	return []uint{1, 2, 3}
+}
+
+func (*Choice) TranslatePointUints() map[string]map[string]string {
+	return map[string]map[string]string{"en": {"1": "1", "2": "2", "3": "3"}, "zh-CN": {"1": "1分", "2": "2分", "3": "3分"}}
+}
+
 func (m *Choice) TranslateOptions() map[string]map[string]map[string]string {
 	t := map[string]map[string]map[string]string{"en": {}, "zh-CN": {}}
+
+	tPoint := m.TranslatePointUints()
+	t["en"]["Point"] = tPoint["en"]
+	t["zh-CN"]["Point"] = tPoint["zh-CN"]
 
 	return t
 }

@@ -25,6 +25,66 @@ fields:
     validator:
       required: true
   - name:
+      value: Point
+      en: Point
+      zh-CN: 分数
+    view:
+      dropdown:
+        option:
+          uints:
+            - value: 1
+              en: '1'
+              zh-CN: '1分'
+            - value: 2
+              en: '2'
+              zh-CN: '2分'
+            - value: 3
+              en: '3'
+              zh-CN: '3分'
+    validator:
+      required: true
+  - name:
+      value: Limit
+      en: Limit
+      zh-CN: 上限
+    view:
+      number:
+        uint: true
+    validator:
+      min: 2
+      max: 10
+  - name:
+      value: Expire
+      en: Expire
+      zh-CN: 有效时间
+    view:
+      calendar:
+        showicon: true
+        showtime: true
+    validator:
+      required: true
+  - name:
+      value: Answer
+      en: Answer
+      zh-CN: 答案
+    view:
+      file:
+        uploadto: uploads
+    validator:
+      required: true
+  - name:
+      value: Teachers
+      en: Teachers
+      zh-CN: 责任老师
+    view:
+      multiselect:
+        many2many:
+          package: class
+          name: Teacher
+          field: Name
+    validator:
+      required: true
+  - name:
       value: QuestionID
       en: Question ID
       zh-CN: 问题ID
