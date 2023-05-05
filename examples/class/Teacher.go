@@ -12,7 +12,7 @@ type Teacher struct {
 }
 
 func (*Teacher) Icon() string {
-	return "teacher"
+	return "flag"
 }
 
 func (*Teacher) TranslatePkg() map[string]string {

@@ -13,7 +13,7 @@ type Choice struct {
 }
 
 func (*Choice) Icon() string {
-	return "choice"
+	return "book"
 }
 
 func (*Choice) Purge() {}

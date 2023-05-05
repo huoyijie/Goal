@@ -13,7 +13,7 @@ type Question struct {
 }
 
 func (*Question) Icon() string {
-	return "paper"
+	return "question"
 }
 
 func (*Question) Purge() {}

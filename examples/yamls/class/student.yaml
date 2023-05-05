@@ -10,7 +10,7 @@ name:
 database:
   embeddingbase: true
 view:
-  icon: student
+  icon: sun
 fields:
   - name:
       value: Name

@@ -11,7 +11,7 @@ database:
   embeddingbase: true
   purge: true
 view:
-  icon: paper
+  icon: question
 fields:
   - name:
       value: Label
